@@ -1,0 +1,26 @@
+{{#if user}}
+<h1 class="text-danger">Hi {{user.fname}}</h1>
+{{else}}
+<h1>WELCOME</h1>
+{{/if}}
+{{!-- <h1>Products</h1> --}}
+<div class="container mt-5">
+   <div class="row">
+
+        {{#each products}}
+
+        <div class="col-md-3 mr-3">
+            <div class="card" style="width: 18rem">
+                <img class="card-img-top " src="product-images/{{this._id}}.jpg" style="height:15rem" alt="Card image cap">
+                <div class="card-body">
+                    <h5 class="card-title">{{this.pro_title}}</h5>
+                    <p class="card-text">{{this.pro_description}}</p>
+                    <a href="#" class="btn btn-primary">Add to Cart</a>
+                </div>
+            </div>
+        </div>
+
+        {{/each}}
+   
+   </div>
+</div>

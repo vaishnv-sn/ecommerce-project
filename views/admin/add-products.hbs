@@ -1,0 +1,44 @@
+
+    <div class="container mt-4">
+      <div class="row">
+        <div class="col-md-6">
+          <h2 class="text-center">Add Product</h2>
+
+          <form action="/admin/add-product" enctype="multipart/form-data" method="post">
+
+            <label for="pro_title">Product Title</label>
+            <input type="text" name="pro_title" class="form-control mb-4">
+
+            <label for="pro_description">Description</label>
+            <input type="text" name="pro_description" class="form-control mb-4">
+
+            <label for="pro_price">Price</label>
+            <input type="number" name="pro_price" class="form-control mb-4">
+
+            <label for="pro_image">Image</label>
+            <input type="file" name="pro_image" class="form-control mb-4">
+
+
+            <label for="pro_category">Categories</label>
+            <select name="category" id="pro_category" class="form-control mb-4">
+              <option value="Sun Glass">Sun Glass</option>
+              <option value="Computer Glass">Computer Glass</option>
+              <option value="Eye Lenses">Eye Lenses</option>
+            </select>
+
+            <label for="pro_gender">Gender</label>
+            <select name="gender" id="pro_gender" class="form-control mb-4">
+              <option value="male">male</option>
+              <option value="female">Female</option>
+              <option value="unisex">Unisex</option>
+            </select>
+
+            <label for="pro_stock">Stock count</label>
+            <input type="number" name="pro_stock" class="form-control mb-4">
+
+            <button type="submit" class="btn btn-success mt-4">Submit</button>
+
+          </form>
+        </div>
+      </div>
+    </div>
