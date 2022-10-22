@@ -4,16 +4,34 @@ var userHelper = require('../helpers/user-helper')
 var adminHelper = require('../helpers/admin-helper')
 var productHelper = require('../helpers/product-helper');
 const e = require('express');
-const { blockUser, unblockUser } = require('../helpers/admin-helper');
+// const { blockUser, unblockUser } = require('../helpers/admin-helper');
+const {adminRouteProtection} = require('../Middlewares/routeProtection');
+
 
 /* GET admin login */
-router.get('/', function (req, res, next) {
-  res.render('admin/adminLogin', { admin: true });
-});
+router.route('/')
+  .get(function (req, res, next) {
+    res.render('admin/adminLogin', { adminLoginErr:req.session.adminLoginErr })
+    req.session.adminLoginErr=null;
+  })
+  .post(function (req, res) {
+    console.log(req.body);
+    adminHelper.adminLogin(req.body).then((response) => {
+      // console.log(response);
+      if (response.adminStatus) {
+        req.session.admin = response.admin
+        req.session.adminLoggedIn = true
+        res.redirect('admin/all-users')
+      } else {
+        req.session.adminLoginErr = "Warning: Invalid admin credentials!!!"
+        res.redirect('/admin')
+      }
+    })
+  })
 
 /* GET users listing. */
 router.route('/all-users')
-  .get(function (req, res) {
+  .get(adminRouteProtection,function (req, res) {
     adminHelper.getAllUsers().then((users) => {
       // console.log(users);
       res.render('admin/list-users', { users, admin: true })
@@ -22,7 +40,7 @@ router.route('/all-users')
 
 // add user
 router.route('/add-user')
-  .get(function (req, res) {
+  .get(adminRouteProtection, function (req, res) {
     res.render('admin/add-user', { admin: true })
   })
   .post(function (req, res) {
@@ -33,7 +51,7 @@ router.route('/add-user')
 
 /* GET users listing. */
 router.route('/all-products')
-  .get(function (req, res) {
+  .get(adminRouteProtection, function (req, res) {
     productHelper.getAllProducts().then((products) => {
       // console.log(products);
       res.render('admin/list-products', { admin: true, products })
@@ -41,12 +59,12 @@ router.route('/all-products')
   })
 
 router.route('/categories')
-  .get(function (req, res) {
+  .get(adminRouteProtection, function (req, res) {
     res.render('admin/categories', { admin: true })
   })
 
 router.route("/add-product")
-  .get(function (req, res) {
+  .get(adminRouteProtection, function (req, res) {
     res.render('admin/add-products', { admin: true })
   })
   .post(function (req, res) {
@@ -66,12 +84,12 @@ router.route("/add-product")
   })
 
 router.route("/all-orders")
-  .get(function (req, res) {
+  .get(adminRouteProtection, function (req, res) {
     res.render('admin/all-orders', { admin: true })
   })
 
 // delete product
-router.get('/delete-product/:id', (req, res) => {
+router.get('/delete-product/:id',adminRouteProtection, (req, res) => {
   let prodId = req.params.id
   // console.log(userId+'userId');
   productHelper.deleteProduct(prodId).then((responce) => {
@@ -81,7 +99,7 @@ router.get('/delete-product/:id', (req, res) => {
 
 // edit product
 router.route('/edit-product/:id')
-  .get(async (req, res) => {
+  .get(adminRouteProtection, async (req, res) => {
     let product = await productHelper.getProductDetails(req.params.id)
     // console.log(product);
     res.render('admin/edit-product', { product, admin: true })
@@ -98,7 +116,7 @@ router.route('/edit-product/:id')
 
 // Block User
 router.route('/block-user/:id')
-  .get((req, res) => {
+  .get(adminRouteProtection, (req, res) => {
     // console.log(req.params.id);
     adminHelper.blockUser(req.params.id).then(() => {
       res.redirect('/admin/all-users')
@@ -107,11 +125,18 @@ router.route('/block-user/:id')
 
 // Unblock User
 router.route('/unblock-user/:id')
-  .get((req, res) => {
+  .get(adminRouteProtection, (req, res) => {
     adminHelper.unblockUser(req.params.id).then(() => {
       res.redirect('/admin/all-users')
     })
   });
+
+// Logout route
+router.get('/admin-logout',adminRouteProtection,(req,res)=>{
+  req.session.admin=false;
+  req.session.adminLoggedIn=false;
+  res.redirect('/admin')
+})
 
 
 module.exports = router;
