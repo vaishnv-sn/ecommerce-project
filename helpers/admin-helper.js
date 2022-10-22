@@ -11,12 +11,26 @@ module.exports = {
     })
   },
 
-  blockUser: () => {
-
+  blockUser: (userId) => {
+    return new Promise(async (resolve, reject) => {
+      await db.get().collection(USER_COLLECTION).updateOne({ _id: objectId(userId) }, {
+        $set: {
+          blocked: true
+        }
+      })
+      resolve()
+    })
   },
 
-  unblockUser: () => {
-
+  unblockUser: (userId) => {
+    return new Promise(async (resolve, reject) => {
+      await db.get().collection(USER_COLLECTION).updateOne({ _id: objectId(userId) }, {
+        $set: {
+          blocked: false
+        }
+      })
+      resolve()
+    })
   }
 
 }

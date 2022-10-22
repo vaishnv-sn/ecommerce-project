@@ -4,70 +4,71 @@ var userHelper = require('../helpers/user-helper')
 var adminHelper = require('../helpers/admin-helper')
 var productHelper = require('../helpers/product-helper');
 const e = require('express');
+const { blockUser, unblockUser } = require('../helpers/admin-helper');
 
 /* GET admin login */
-router.get('/', function(req, res, next) {
-  res.render('admin/adminLogin',{admin:true});
+router.get('/', function (req, res, next) {
+  res.render('admin/adminLogin', { admin: true });
 });
 
 /* GET users listing. */
 router.route('/all-users')
-  .get(function(req, res) {
+  .get(function (req, res) {
     adminHelper.getAllUsers().then((users) => {
-    // console.log(users);
-    res.render('admin/list-users',{users, admin:true})
+      // console.log(users);
+      res.render('admin/list-users', { users, admin: true })
+    })
   })
-})
 
 // add user
 router.route('/add-user')
-.get(function(req, res){
-  res.render('admin/add-user',{admin:true})
-})
-.post(function(req, res){
-  userHelper.doSignup(req.body).then(
-    res.redirect('/admin/add-user')
-  )
-})
+  .get(function (req, res) {
+    res.render('admin/add-user', { admin: true })
+  })
+  .post(function (req, res) {
+    userHelper.doSignup(req.body).then(
+      res.redirect('/admin/add-user')
+    )
+  })
 
 /* GET users listing. */
 router.route('/all-products')
-  .get(function(req, res) {
-    productHelper.getAllProducts().then((products)=>{
+  .get(function (req, res) {
+    productHelper.getAllProducts().then((products) => {
       // console.log(products);
-      res.render('admin/list-products', {admin:true, products})
-    })
-})
-
-router.route('/categories')
-.get(function(req, res){
-  res.render('admin/categories',{admin:true})
-})
-
-router.route("/add-product")
-.get(function(req, res){
-  res.render('admin/add-products',{admin:true})
-})
-.post(function(req, res){
-  // console.log(req.body);
-  // console.log(req.files.pro_image);
-  productHelper.addProduct(req.body,(id)=>{
-    // console.log(id);
-    let Image = req.files.pro_image;
-    Image.mv('./public/product-images/'+id+'.jpg',(err)=>{
-      if(!err){
-        res.redirect('/admin/add-product')
-      }else{
-        console.log(err);
-      }
+      res.render('admin/list-products', { admin: true, products })
     })
   })
-})
+
+router.route('/categories')
+  .get(function (req, res) {
+    res.render('admin/categories', { admin: true })
+  })
+
+router.route("/add-product")
+  .get(function (req, res) {
+    res.render('admin/add-products', { admin: true })
+  })
+  .post(function (req, res) {
+    // console.log(req.body);
+    // console.log(req.files.pro_image);
+    productHelper.addProduct(req.body, (id) => {
+      // console.log(id);
+      let Image = req.files.pro_image;
+      Image.mv('./public/product-images/' + id + '.jpg', (err) => {
+        if (!err) {
+          res.redirect('/admin/add-product')
+        } else {
+          console.log(err);
+        }
+      })
+    })
+  })
 
 router.route("/all-orders")
-.get(function(req, res){
-  res.render('admin/all-orders',{admin:true})
-})
+  .get(function (req, res) {
+    res.render('admin/all-orders', { admin: true })
+  })
 
 // delete product
 router.get('/delete-product/:id', (req, res) => {
@@ -80,21 +81,37 @@ router.get('/delete-product/:id', (req, res) => {
 
 // edit product
 router.route('/edit-product/:id')
-.get(async (req, res) => {
-  let product = await productHelper.getProductDetails(req.params.id)
-  // console.log(product);
-  res.render('admin/edit-product', { product, admin: true })
-})
-.post((req, res) => {
-  productHelper.updateProduct(req.params.id, req.body).then(() => {
-    res.redirect('/admin/all-products')
-    // console.log(req.files.pro_image);
-    if(req.files.pro_image){
-      req.files.pro_image.mv('./public/product-images/'+req.params.id+'.jpg')
-    }
+  .get(async (req, res) => {
+    let product = await productHelper.getProductDetails(req.params.id)
+    // console.log(product);
+    res.render('admin/edit-product', { product, admin: true })
   })
-});
+  .post((req, res) => {
+    productHelper.updateProduct(req.params.id, req.body).then(() => {
+      res.redirect('/admin/all-products')
+      // console.log(req.files.pro_image);
+      if (req.files.pro_image) {
+        req.files.pro_image.mv('./public/product-images/' + req.params.id + '.jpg')
+      }
+    })
+  });
 
+// Block User
+router.route('/block-user/:id')
+  .get((req, res) => {
+    // console.log(req.params.id);
+    adminHelper.blockUser(req.params.id).then(() => {
+      res.redirect('/admin/all-users')
+    })
+  });
+
+// Unblock User
+router.route('/unblock-user/:id')
+  .get((req, res) => {
+    adminHelper.unblockUser(req.params.id).then(() => {
+      res.redirect('/admin/all-users')
+    })
+  });
 
 
 module.exports = router;
