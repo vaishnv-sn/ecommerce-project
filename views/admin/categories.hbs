@@ -1,1 +1,48 @@
-<h1>categories</h1>
+<div class="container">
+    <div class="container bg-dark p-3 mt-2">
+        <h3 class="text-light text-center font-weight-bold">Category Management</h3>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <form action="/admin/categories" class="mt-5" method="post">
+                <label class="font-weight-bold" for="category">Add category</label>
+                <input type="text" name="category" class="form-control" id="category">
+                <button type="submit" class="btn btn-success mt-4 ">Submit</button>
+            </form>
+        </div>
+        <div class="col-md-6">
+            <div class="container mt-5">
+
+                <table class="table  table" id="userTable">
+                    <thead>
+                        <tr>
+                            <th scope="col">Categories</th>
+                            <th scope="col">Delete</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each categories}}
+                            <tr class="text-dark">
+                                <th class="text-dark" scope="row">{{this.category}}</th>
+                                <td>
+                                    <a href="/admin/delete-category/{{this._id}}" onclick="return confirm('Are you sure to delete the category {{this.category}}?')" class="btn btn-dark">Delete</a>
+                                </td>
+                            </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mt-5 text-right">
+    <a href="/admin/admin-logout" class="btn btn-danger px- text-right text-light">Logout</a>
+</div>
+
+
+{{!-- 
+<script>
+    $(document).ready( function () { $('#userTable').DataTable(); } );
+</script> --}}

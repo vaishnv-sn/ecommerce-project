@@ -3,16 +3,17 @@ var router = express.Router();
 var userHelper = require('../helpers/user-helper')
 var adminHelper = require('../helpers/admin-helper')
 var productHelper = require('../helpers/product-helper');
+var categoryHelper = require('../helpers/category-helper')
 const e = require('express');
 // const { blockUser, unblockUser } = require('../helpers/admin-helper');
-const {adminRouteProtection} = require('../Middlewares/routeProtection');
+const { adminRouteProtection } = require('../Middlewares/routeProtection');
 
 
 /* GET admin login */
 router.route('/')
   .get(function (req, res, next) {
-    res.render('admin/adminLogin', { adminLoginErr:req.session.adminLoginErr })
-    req.session.adminLoginErr=null;
+    res.render('admin/adminLogin', { adminLoginErr: req.session.adminLoginErr })
+    req.session.adminLoginErr = null;
   })
   .post(function (req, res) {
     console.log(req.body);
@@ -31,7 +32,7 @@ router.route('/')
 
 /* GET users listing. */
 router.route('/all-users')
-  .get(adminRouteProtection,function (req, res) {
+  .get(adminRouteProtection, function (req, res) {
     adminHelper.getAllUsers().then((users) => {
       // console.log(users);
       res.render('admin/list-users', { users, admin: true })
@@ -58,20 +59,37 @@ router.route('/all-products')
     })
   })
 
+/* Categories route */
 router.route('/categories')
-  .get(adminRouteProtection, function (req, res) {
-    res.render('admin/categories', { admin: true })
+  .get(function (req, res) {
+    categoryHelper.getAllCategory().then((categories) => {
+      res.render('admin/categories', { categories, admin: true })
+    })
+  })
+  .post((req, res) => {
+    categoryHelper.addCategory(req.body).then(() => {
+      res.redirect('/admin/categories')
+    })
   })
 
+/* Delete Category route */
+router.route('/delete-category/:id')
+  .get((req, res) => {
+    categoryHelper.deleteCategory(req.params.id).then(()=>{
+      res.redirect('/admin/categories')
+    })
+  })
+
+
+/* Product adding route */
 router.route("/add-product")
   .get(adminRouteProtection, function (req, res) {
-    res.render('admin/add-products', { admin: true })
+    categoryHelper.getAllCategory().then((categories) => {
+      res.render('admin/add-products', { categories, admin: true })
+    })
   })
   .post(function (req, res) {
-    // console.log(req.body);
-    // console.log(req.files.pro_image);
     productHelper.addProduct(req.body, (id) => {
-      // console.log(id);
       let Image = req.files.pro_image;
       Image.mv('./public/product-images/' + id + '.jpg', (err) => {
         if (!err) {
@@ -89,7 +107,7 @@ router.route("/all-orders")
   })
 
 // delete product
-router.get('/delete-product/:id',adminRouteProtection, (req, res) => {
+router.get('/delete-product/:id', adminRouteProtection, (req, res) => {
   let prodId = req.params.id
   // console.log(userId+'userId');
   productHelper.deleteProduct(prodId).then((responce) => {
@@ -132,9 +150,9 @@ router.route('/unblock-user/:id')
   });
 
 // Logout route
-router.get('/admin-logout',adminRouteProtection,(req,res)=>{
-  req.session.admin=false;
-  req.session.adminLoggedIn=false;
+router.get('/admin-logout', adminRouteProtection, (req, res) => {
+  req.session.admin = false;
+  req.session.adminLoggedIn = false;
   res.redirect('/admin')
 })
 
