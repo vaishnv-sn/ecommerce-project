@@ -75,7 +75,7 @@ router.route('/categories')
 /* Delete Category route */
 router.route('/delete-category/:id')
   .get((req, res) => {
-    categoryHelper.deleteCategory(req.params.id).then(()=>{
+    categoryHelper.deleteCategory(req.params.id).then(() => {
       res.redirect('/admin/categories')
     })
   })
@@ -101,6 +101,7 @@ router.route("/add-product")
     })
   })
 
+// all orders route
 router.route("/all-orders")
   .get(adminRouteProtection, function (req, res) {
     res.render('admin/all-orders', { admin: true })
@@ -126,7 +127,7 @@ router.route('/edit-product/:id')
     productHelper.updateProduct(req.params.id, req.body).then(() => {
       res.redirect('/admin/all-products')
       // console.log(req.files.pro_image);
-      if (req.files.pro_image) {
+      if (req.files?.pro_image) {
         req.files.pro_image.mv('./public/product-images/' + req.params.id + '.jpg')
       }
     })

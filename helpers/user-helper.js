@@ -59,75 +59,67 @@ module.exports = {
   },
 
   /* -------------------------------------------------------------------------- */
-  /*                                   GET OTP                                  */
+  /*                               Send OTP                                     */
   /* -------------------------------------------------------------------------- */
 
-  getOtp: (req, res) => {
-    res.render('user/otp')
-  },
+  doOTP: (userData) => {
 
-  /* -------------------------------------------------------------------------- */
-  /*                                get Confirm OTP                             */
-  /* -------------------------------------------------------------------------- */
+    let response = {}
+    return new Promise(async (resolve, reject) => {
+      let user = await db.get().collection(USER_COLLECTION).findOne({ number: userData.phone })
+      console.log(user);
+      if (user) {
+        response.status = true
+        response.user = user
+        client.verify.v2.services(otp.serviceID)
+          .verifications
+          .create({ to: `+91${userData.phone}`, channel: 'sms' })
+          .then((verification) => {
+            console.log(verification.status);
+          });
+        // console.log(response);
+        resolve(response)
 
-  confirmOtp: (req, res) => {
-    res.render('user/confirmotp')
-  },
-
-  /* -------------------------------------------------------------------------- */
-  /*                                  Post OTP                                  */
-  /* -------------------------------------------------------------------------- */
-
-  // let signupData
-  postOtp: (req, res) => {
-    userhelper.doOTP(req.body).then((response) => {
-      if (response.status) {
-        signupData = response.user
-        res.redirect('/confirmotp')
       }
       else {
-        res.redirect('/otp')
+        response.status = false;
+        resolve(response)
+
       }
     })
   },
 
 
   /* -------------------------------------------------------------------------- */
-  /*                                 Resend Otp                                 */
+  /*                               Confirm OTP                                  */
   /* -------------------------------------------------------------------------- */
 
-  postresendOtp: (req, res) => {
-    userhelper.doOTP(req.body).then((response) => {
-      if (response.status) {
-        signupData = response.user
-        res.redirect('/confirmotp')
-      }
-      else {
-        res.redirect('/otp')
-      }
+  doOTPconfirm: (OTP,number) => {
+
+    return new Promise((resolve, reject) => {
+
+      client.verify.v2.services(otp.serviceID)
+        .verificationChecks
+        .create({
+          to: `+91${number}`,
+          code: OTP.otp
+        })
+        .then((data) => {
+          console.log(data);
+          if (data.status == 'approved') {
+            // response.user = user;
+            // response.user.status = true
+            // response.status = true;
+            resolve({ status: true })
+          }
+          else {
+            resolve({ status: false })
+          }
+
+        })
+
     })
-  },
 
-
-  /* -------------------------------------------------------------------------- */
-  /*                              POST Confirm OTP                              */
-  /* -------------------------------------------------------------------------- */
-
-  postconfirmOtp: (req, res) => {
-    userhelper.doOTPconfirm(req.body, signupData).then((response) => {
-      if (response.status) {
-        req.session.loggedIn = true;
-        req.session.user = signupData
-
-        res.redirect('/')
-      }
-      else {
-        res.redirect('/confirmotp',)
-      }
-    })
-  },
-  checkBlock: (userData) => {
-    db.get().collection(USER_COLLECTION).findOne
   }
 
 }

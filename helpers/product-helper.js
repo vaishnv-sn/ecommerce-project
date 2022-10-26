@@ -25,10 +25,9 @@ module.exports = {
         })
     },
     getProductDetails: (prodId) => {
-        return new Promise((resolve, reject) => {
-            db.get().collection(PRODUCT_COLLECTION).findOne({ _id: objectId(prodId) }).then((product) => {
-                resolve(product)
-            })
+        return new Promise(async (resolve, reject) => {
+            product = await db.get().collection(PRODUCT_COLLECTION).findOne({ _id: objectId(prodId) })
+            resolve(product)
         })
     },
     updateProduct:(prodId,productDetails)=>{

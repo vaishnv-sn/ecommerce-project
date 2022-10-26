@@ -1,0 +1,14 @@
+<div class="d-flex justify-content-center align-items-center container">
+    <div class="card py-5 px-5 m-5">
+        <h5 class="m-0">Enter your Mobile Number</h5><span class="mobile-text text-info">Enter the number registered with your account.</span>
+        <div class="d-flex flex-row mt-5" style="width: 500px;">
+            <form action="/phone-page" class="form" method="post" >
+                <input type="tel" class="form-control mx-3 "style="width: 450px;"  name="phone" id="phone" />
+                <input type="submit" class="btn btn-success my-2 mx-3" value="Get OTP" />
+                {{#if otpNumberErr}}
+                <p class="text-danger">{{otpNumberErr}}</p>
+                {{/if}}
+            </form>
+        </div>
+    </div>
+</div>
