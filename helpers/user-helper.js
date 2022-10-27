@@ -14,7 +14,7 @@ module.exports = {
 
   doSignup: (userData) => {
     return new Promise(async (resolve, reject) => {
-      let user = await db.get().collection(USER_COLLECTION).findOne({ email: userData.email })
+      let user = await db.get().collection(USER_COLLECTION).findOne({ number: userData.number })
       if (user) {
         reject({ status: "User already exists" })
         // console.log("User exists!");
@@ -71,9 +71,9 @@ module.exports = {
       if (user) {
         response.status = true
         response.user = user
-        client.verify.v2.services(otp.serviceID)
-          .verifications
-          .create({ to: `+91${userData.phone}`, channel: 'sms' })
+        client.verify.v2
+          .services(otp.serviceID)
+          .verifications.create({ to: `+91${userData.phone}`, channel: 'sms' })
           .then((verification) => {
             console.log(verification.status);
           });
@@ -98,12 +98,9 @@ module.exports = {
 
     return new Promise((resolve, reject) => {
 
-      client.verify.v2.services(otp.serviceID)
-        .verificationChecks
-        .create({
-          to: `+91${number}`,
-          code: OTP.otp
-        })
+      client.verify.v2
+        .services(otp.serviceID)
+        .verificationChecks.create({to: `+91${number}`,code: OTP.otp})
         .then((data) => {
           console.log(data);
           if (data.status == 'approved') {
@@ -120,6 +117,12 @@ module.exports = {
 
     })
 
+  },
+  getUser: (userNumber)=>{
+    return new Promise(async (resolve, reject)=>{
+      let user = await db.get().collection(USER_COLLECTION).findOne({number:userNumber})
+      resolve(user)
+    })
   }
 
 }

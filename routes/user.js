@@ -4,23 +4,11 @@ const productHelper = require('../helpers/product-helper');
 const userHelper = require('../helpers/user-helper');
 const { response } = require('express');
 var router = express.Router();
+const { clearCache, verifyLogin } = require("../Middlewares/routeProtection");
 
-// cache clearing middleware
-const clearCache = (req, res, next) => {
-  res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
-  res.header('Expires', '-1');
-  res.header('Pragma', 'no-cache');
-  next()
-}
 
 // verify Login middleware
-const verifyLogin = (req, res, next) => {
-  if (req.session.userLoggedIn) {
-    next()
-  } else {
-    res.redirect('/')
-  }
-}
+
 
 /* -------------------------------------------------------------------------- */
 /*                        Landing page route                                  */
@@ -43,8 +31,9 @@ router.route('/login')
     if (req.session.userLoggedIn) {
       res.redirect('/');
     } else
-      res.render('user/login', { loginErr: req.session.loginErr });
+      res.render('user/login', { loginErr: req.session.loginErr, blockErr: req.session.blockedErr });
     req.session.loginErr = null;
+    req.session.blockedErr = null;
   })
   .post(function (req, res) {
     // console.log(req.body);
@@ -65,7 +54,7 @@ router.route('/login')
 /*                         Signup page route                                  */
 /* -------------------------------------------------------------------------- */
 router.route('/signup')
-  .get(function (req, res) {
+  .get(clearCache, function (req, res) {
     res.render('user/signup', { emailErr: req.session.emailErr });
     req.session.emailErr = null;
   })
@@ -83,10 +72,10 @@ router.route('/signup')
 /*                             View product details                           */
 /* -------------------------------------------------------------------------- */
 router.route('/view-product/:id')
-  .get(function (req, res) {
+  .get(clearCache,function (req, res) {
     productHelper.getProductDetails(req.params.id).then((product) => {
       console.log(product);
-      res.render('user/viewProduct', {user: req.session.user, product })
+      res.render('user/viewProduct', { user: req.session.user, product })
     })
 
   });
@@ -140,10 +129,18 @@ router.route('/otp-page')
     // console.log(number + 'success');
     userHelper.doOTPconfirm(req.body, number).then((response) => {
       if (response.status) {
-        req.session.loggedIn = true;
-        req.session.user = number
+        userHelper.getUser(number).then((user) => {
+          console.log(user);
+          if (!user.blocked) {
+            req.session.loggedIn = true;
+            req.session.user = user;
 
-        res.redirect('/')
+            res.redirect('/')
+          } else {
+            req.session.blockedErr = "You can't access this site at this moment"
+            res.redirect('/login')
+          }
+        })
       }
       else {
         req.session.otpErr = "OTP incorrect!!!"

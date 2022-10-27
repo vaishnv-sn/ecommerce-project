@@ -6,7 +6,7 @@ var productHelper = require('../helpers/product-helper');
 var categoryHelper = require('../helpers/category-helper')
 const e = require('express');
 // const { blockUser, unblockUser } = require('../helpers/admin-helper');
-const { adminRouteProtection } = require('../Middlewares/routeProtection');
+const { adminRouteProtection,clearCache } = require('../Middlewares/routeProtection');
 
 
 /* GET admin login */
@@ -32,7 +32,7 @@ router.route('/')
 
 /* GET users listing. */
 router.route('/all-users')
-  .get(adminRouteProtection, function (req, res) {
+  .get(adminRouteProtection,clearCache, function (req, res) {
     adminHelper.getAllUsers().then((users) => {
       // console.log(users);
       res.render('admin/list-users', { users, admin: true })
@@ -41,7 +41,7 @@ router.route('/all-users')
 
 // add user
 router.route('/add-user')
-  .get(adminRouteProtection, function (req, res) {
+  .get(adminRouteProtection,clearCache, function (req, res) {
     res.render('admin/add-user', { admin: true })
   })
   .post(function (req, res) {
@@ -52,7 +52,7 @@ router.route('/add-user')
 
 /* GET users listing. */
 router.route('/all-products')
-  .get(adminRouteProtection, function (req, res) {
+  .get(adminRouteProtection,clearCache, function (req, res) {
     productHelper.getAllProducts().then((products) => {
       // console.log(products);
       res.render('admin/list-products', { admin: true, products })
@@ -61,7 +61,7 @@ router.route('/all-products')
 
 /* Categories route */
 router.route('/categories')
-  .get(function (req, res) {
+  .get(adminRouteProtection,clearCache, function (req, res) {
     categoryHelper.getAllCategory().then((categories) => {
       res.render('admin/categories', { categories, admin: true })
     })
@@ -74,7 +74,7 @@ router.route('/categories')
 
 /* Delete Category route */
 router.route('/delete-category/:id')
-  .get((req, res) => {
+  .get(adminRouteProtection,clearCache, (req, res) => {
     categoryHelper.deleteCategory(req.params.id).then(() => {
       res.redirect('/admin/categories')
     })
@@ -83,7 +83,7 @@ router.route('/delete-category/:id')
 
 /* Product adding route */
 router.route("/add-product")
-  .get(adminRouteProtection, function (req, res) {
+  .get(adminRouteProtection,clearCache, function (req, res) {
     categoryHelper.getAllCategory().then((categories) => {
       res.render('admin/add-products', { categories, admin: true })
     })
@@ -103,12 +103,12 @@ router.route("/add-product")
 
 // all orders route
 router.route("/all-orders")
-  .get(adminRouteProtection, function (req, res) {
+  .get(adminRouteProtection,clearCache, function (req, res) {
     res.render('admin/all-orders', { admin: true })
   })
 
 // delete product
-router.get('/delete-product/:id', adminRouteProtection, (req, res) => {
+router.get('/delete-product/:id',clearCache, adminRouteProtection, (req, res) => {
   let prodId = req.params.id
   // console.log(userId+'userId');
   productHelper.deleteProduct(prodId).then((responce) => {
@@ -118,7 +118,7 @@ router.get('/delete-product/:id', adminRouteProtection, (req, res) => {
 
 // edit product
 router.route('/edit-product/:id')
-  .get(adminRouteProtection, async (req, res) => {
+  .get(adminRouteProtection,clearCache, async (req, res) => {
     let product = await productHelper.getProductDetails(req.params.id)
     // console.log(product);
     res.render('admin/edit-product', { product, admin: true })
@@ -135,7 +135,7 @@ router.route('/edit-product/:id')
 
 // Block User
 router.route('/block-user/:id')
-  .get(adminRouteProtection, (req, res) => {
+  .get(adminRouteProtection,clearCache, (req, res) => {
     // console.log(req.params.id);
     adminHelper.blockUser(req.params.id).then(() => {
       res.redirect('/admin/all-users')
@@ -144,7 +144,7 @@ router.route('/block-user/:id')
 
 // Unblock User
 router.route('/unblock-user/:id')
-  .get(adminRouteProtection, (req, res) => {
+  .get(adminRouteProtection,clearCache, (req, res) => {
     adminHelper.unblockUser(req.params.id).then(() => {
       res.redirect('/admin/all-users')
     })
