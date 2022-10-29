@@ -72,7 +72,7 @@ router.route('/signup')
 /*                             View product details                           */
 /* -------------------------------------------------------------------------- */
 router.route('/view-product/:id')
-  .get(clearCache,function (req, res) {
+  .get(clearCache, function (req, res) {
     productHelper.getProductDetails(req.params.id).then((product) => {
       console.log(product);
       res.render('user/viewProduct', { user: req.session.user, product })
@@ -102,7 +102,7 @@ router.route('/phone-page')
   })
   .post((req, res) => {
     req.session.otpNumber = req.body.phone
-    console.log(req.body.phone);
+    console.log(req.body);
     let signupData;
     userHelper.doOTP(req.body).then((response) => {
       if (response.status) {
@@ -127,6 +127,7 @@ router.route('/otp-page')
   .post((req, res) => {
     let number = req.session.otpNumber
     // console.log(number + 'success');
+    console.log(req.body);
     userHelper.doOTPconfirm(req.body, number).then((response) => {
       if (response.status) {
         userHelper.getUser(number).then((user) => {
@@ -156,6 +157,7 @@ router.route('/cart')
   .get(verifyLogin, function (req, res) {
     res.render('user/cart', { user: req.session.user })
   })
+
 
 
 
