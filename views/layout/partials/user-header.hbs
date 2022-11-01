@@ -1,27 +1,33 @@
-<nav class="navbar navbar-expand-lg navbar-light bg-primary">
-    <a class="navbar-brand text-light" href="/">RED-GEAR</a>
+<nav class='navbar navbar-expand-lg navbar-light bg-primary'>
+    <a class='navbar-brand text-light' href='/'>RED-GEAR</a>
     <button
-        class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
-        aria-controls="navbarNavAltMarkup"
-        aria-expanded="false"
-        aria-label="Toggle navigation"
+        class='navbar-toggler'
+        type='button'
+        data-toggle='collapse'
+        data-target='#navbarNavAltMarkup'
+        aria-controls='navbarNavAltMarkup'
+        aria-expanded='false'
+        aria-label='Toggle navigation'
     >
-        <span class="navbar-toggler-icon"></span>
+        <span class='navbar-toggler-icon'></span>
     </button>
-    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-        <div class="navbar-nav">
-            <a class="nav-item nav-link active" href="/">Products</a>
+    <div class='collapse navbar-collapse' id='navbarNavAltMarkup'>
+        <div class='navbar-nav'>
+            <a class='nav-item nav-link text-light' href='/'>Products</a>
             {{#if user}}
-            <a class="nav-item nav-link" href="/cart">Cart</a>
-            <a class="nav-item nav-link" href="#">Orders</a>
+                <a class='nav-item nav-link text-light' href='/cart'>Cart
+                {{#if cartCount}}
+                <span class='ml-1 badge badge-danger' id="cart-count">{{cartCount}}</span></a>
+                {{/if}}
+                <a class='nav-item nav-link text-light' href='#'>Orders</a>
             {{/if}}
         </div>
     </div>
     <div>
         {{#if user}}
-        <a href="/logout" class="btn btn-danger mr-4 my-2">Logout</a>
+            <a href='/logout' class='btn btn-danger mr-4 my-2'>Logout</a>
         {{else}}
-        <a href="/login" class="btn btn-success mr-4 my-2">Login</a>
+            <a href='/login' class='btn btn-success mr-4 my-2'>Login</a>
         {{/if}}
     </div>
 </nav>

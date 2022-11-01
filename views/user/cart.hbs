@@ -1,1 +1,38 @@
-<h1>Cart</h1>
+<div class='container mt-5 p-3 rounded cart'>
+    <div class='row no-gutters'>
+        <div class='col-md-8'>
+            <table class='table mt-5'>
+                <thead>
+                    <tr>
+                        <th scope='col'>Item</th>
+                        <th scope='col'>Title</th>
+                        <th scope='col'>Quantity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each cartProducts}}
+                        <tr>
+                            <td><img
+                                    style='width: 70px; height:70px;'
+                                    src='/product-images/{{this._id}}.jpg'
+                                    alt='product img'
+                                /></td>
+                            <td>{{this.pro_title}}</td>
+                            <td>
+                                <button class='cart-item-count mr-3 border-0'>-</button>1<button
+                                    class='cart-item-count ml-3 border-0'
+                                >+</button>
+                            </td>
+                            <td>
+                                <a href='' class='btn btn-danger'>Remove</a>
+                            </td>
+                        </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+        <div class='col-md-4'>
+            Payment Details
+        </div>
+    </div>
+</div>

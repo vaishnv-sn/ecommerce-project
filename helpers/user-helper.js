@@ -1,5 +1,5 @@
 var db = require('../config/connection')
-const { USER_COLLECTION } = require('../config/collections');
+const { USER_COLLECTION, CART_COLLECTION, PRODUCT_COLLECTION } = require('../config/collections');
 const bcrypt = require('bcrypt');
 var objectId = require('mongodb').ObjectId
 const otp = require('../config/otp')
@@ -67,7 +67,8 @@ module.exports = {
     let response = {}
     return new Promise(async (resolve, reject) => {
       let user = await db.get().collection(USER_COLLECTION).findOne({ number: userData.phone })
-      console.log(user);
+      // console.log(user);
+      // console.log(otp.accountSID, otp.authToken, otp.serviceID);
       if (user) {
         response.status = true
         response.user = user
@@ -94,15 +95,15 @@ module.exports = {
   /*                               Confirm OTP                                  */
   /* -------------------------------------------------------------------------- */
 
-  doOTPconfirm: (OTP,number) => {
+  doOTPconfirm: (OTP, number) => {
 
     return new Promise((resolve, reject) => {
 
       client.verify.v2
         .services(otp.serviceID)
-        .verificationChecks.create({to: `+91${number}`,code: OTP.otp})
+        .verificationChecks.create({ to: `+91${number}`, code: OTP.otp })
         .then((data) => {
-          console.log(data);
+          // console.log(data);
           if (data.status == 'approved') {
             // response.user = user;
             // response.user.status = true
@@ -118,11 +119,72 @@ module.exports = {
     })
 
   },
-  getUser: (userNumber)=>{
-    return new Promise(async (resolve, reject)=>{
-      let user = await db.get().collection(USER_COLLECTION).findOne({number:userNumber})
+
+  getUser: (userNumber) => {
+    return new Promise(async (resolve, reject) => {
+      let user = await db.get().collection(USER_COLLECTION).findOne({ number: userNumber })
       resolve(user)
     })
-  }
+  },
 
+  addToCart: (prodId, userId) => {
+    return new Promise(async (resolve, reject) => {
+      let userCart = await db.get().collection(CART_COLLECTION).findOne({ user: objectId(userId) });
+      if (userCart) {
+        db.get().collection(CART_COLLECTION)
+          .updateOne({ user: objectId(userId) },
+            {
+              $push: { products: objectId(prodId) }
+            })
+        resolve()
+      } else {
+        let cartObj = {
+          user: objectId(userId),
+          products: [objectId(prodId)]
+        }
+        db.get().collection(CART_COLLECTION).insertOne(cartObj)
+        resolve()
+      }
+    })
+  },
+
+  getCartProducts: (userId) => {
+    return new Promise(async (resolve, reject) => {
+      let cartItems = await db.get().collection(CART_COLLECTION).aggregate([
+        {
+          $match: { user: objectId(userId) }
+        },
+        {
+          $lookup: {
+            from: PRODUCT_COLLECTION,
+            let: {
+              prodList: '$products'
+            },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $in: ['$_id', '$$prodList']
+                  }
+                }
+              },
+            ],
+            as: 'cartItems'
+          }
+        }
+      ]).toArray()
+      resolve(cartItems[0].cartItems)
+    })
+  },
+  getCartCount: (userId) => {
+    return new Promise(async (resolve, reject) => {
+      let count = 0;
+      let cart = await db.get().collection(CART_COLLECTION).findOne({ user: objectId(userId) });
+      // console.log(cart);
+      if (cart) {
+        count = cart.products.length
+      }
+      resolve(count)
+    })
+  }
 }

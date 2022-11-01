@@ -14,10 +14,14 @@ const { clearCache, verifyLogin } = require("../Middlewares/routeProtection");
 /*                        Landing page route                                  */
 /* -------------------------------------------------------------------------- */
 router.route('/')
-  .get(function (req, res) {
+  .get(async function (req, res) {
+    let cartCount = null
+    if (req.session.user) {
+      cartCount = await userHelper.getCartCount(req.session.user._id)
+    }
     productHelper.getAllProducts().then((products) => {
       // console.log(products);
-      res.render('user/landingPage', { user: req.session.user, products });
+      res.render('user/landingPage', { user: req.session.user, products, cartCount });
     })
 
   });
@@ -123,6 +127,7 @@ router.route('/phone-page')
 router.route('/otp-page')
   .get(function (req, res) {
     res.render('user/enterOtp', { otpErr: req.session.otpErr })
+    req.session.otpErr = null;
   })
   .post((req, res) => {
     let number = req.session.otpNumber
@@ -154,9 +159,22 @@ router.route('/otp-page')
 /*                                    Cart route                              */
 /* -------------------------------------------------------------------------- */
 router.route('/cart')
-  .get(verifyLogin, function (req, res) {
-    res.render('user/cart', { user: req.session.user })
+  .get(verifyLogin, async function (req, res) {
+    console.log(req.session.user);
+    let cartProducts = await userHelper.getCartProducts(req.session.user._id)
+    console.log(cartProducts);
+    res.render('user/cart', { user: req.session.user, cartProducts })
   })
+
+router.route('/add-to-cart/:id')
+  .get(verifyLogin, (req, res) => {
+    // console.log('api called');
+    // console.log(req.session.user._id);
+    // console.log(req.params.id);
+    userHelper.addToCart(req.params.id, req.session.user._id).then(() => {
+      res.json({ status: true })
+    });
+  });
 
 
 

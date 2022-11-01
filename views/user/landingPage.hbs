@@ -1,23 +1,29 @@
-{{!-- <h1>Products</h1> --}}
-<div class="container mt-5">
-   <div class="row">
+{{! <h1>Products</h1> }}
+<div class='container mt-5'>
+    <div class='row'>
 
         {{#each products}}
 
-        <div class="col-md-4 mb-5 " >
-            <div class="card" style="width: 18rem;" >
-                <img class="card-img-top " src="product-images/{{this._id}}.jpg" style="height:15rem" alt="Card image cap">
-                <div class="card-body ">
-                    <h5 class="card-title font-weight-bold">{{this.pro_title}}</h5>
-                    <p class="card-text  font-weight-bold m-0">Price: <span class="text-success">${{this.pro_price}}/-</span></p>
-                    <p class="card-text text-muted">{{this.pro_description}}</p>
-                    <a href="#" class="btn btn-primary mr-4">Add to Cart</a>
-                    <a href="/view-product/{{this._id}}" class="btn btn-warning">View Item</a>
+            <div class='col-md-4 mb-5'>
+                <div class='card' style='width: 18rem;'>
+                    <img
+                        class='card-img-top'
+                        src='product-images/{{this._id}}.jpg'
+                        style='height:15rem'
+                        alt='Card image cap'
+                    />
+                    <div class='card-body'>
+                        <h5 class='card-title font-weight-bold'>{{this.pro_title}}</h5>
+                        <p class='card-text font-weight-bold m-0'>Price:
+                            <span class='text-success'>${{this.pro_price}}/-</span></p>
+                        <p class='card-text text-muted'>{{this.pro_description}}</p>
+                        {{!-- <a href='/add-to-cart/{{this._id}}' class='btn btn-primary mr-4'>Add to Cart</a> --}}
+                        <button class='btn btn-primary mr-4' onclick="addToCart('{{this._id}}')">Add to Cart</button>
+                        <a href='/view-product/{{this._id}}' class='btn btn-warning'>View Item</a>
+                    </div>
                 </div>
             </div>
-        </div>
-
         {{/each}}
-   
-   </div>
+
+    </div>
 </div>
