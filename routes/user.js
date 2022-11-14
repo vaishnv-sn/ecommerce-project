@@ -138,9 +138,9 @@ router.route('/otp-page')
         userHelper.getUser(number).then((user) => {
           console.log(user);
           if (!user.blocked) {
-            req.session.loggedIn = true;
             req.session.user = user;
-
+            req.session.userLoggedIn = true;
+            console.log(req.session.user);
             res.redirect('/')
           } else {
             req.session.blockedErr = "You can't access this site at this moment"
@@ -160,23 +160,51 @@ router.route('/otp-page')
 /* -------------------------------------------------------------------------- */
 router.route('/cart')
   .get(verifyLogin, async function (req, res) {
-    console.log(req.session.user);
-    let cartProducts = await userHelper.getCartProducts(req.session.user._id)
-    console.log(cartProducts);
-    res.render('user/cart', { user: req.session.user, cartProducts })
+    let cartProducts = await userHelper.getCartProducts(req.session.user._id);
+    // console.log(cartProducts);
+    let cartTotal = await userHelper.getTotalCartAmount(req.session.user._id);
+    res.render('user/cart', { user: req.session.user, cartProducts, cartTotal });
   })
 
 router.route('/add-to-cart/:id')
   .get(verifyLogin, (req, res) => {
     // console.log('api called');
-    // console.log(req.session.user._id);
-    // console.log(req.params.id);
     userHelper.addToCart(req.params.id, req.session.user._id).then(() => {
       res.json({ status: true })
     });
   });
 
+router.route('/change-product-quantity')
+  .post(verifyLogin, (req, res) => {
+    console.log(req.body);
+    userHelper.changeProductQuantity(req.body).then(async (response) => {
+      // response.cartTotal = await userHelper.getTotalCartAmount(req.body.user);
+      res.json(response)
+    })
+  })
 
+router.route('/place-order')
+  .get(verifyLogin, async (req, res) => {
+    let cartTotal = await userHelper.getTotalCartAmount(req.session.user._id);
+    res.render('user/place-order', { user: req.session.user, cartTotal })
+  })
+  .post(verifyLogin, async (req, res) => {
+    let products = await userHelper.getCartProductList(req.body.userId);
+    let total = await userHelper.getTotalCartAmount(req.body.userId);
+    userHelper.placeOrder(req.body, products, total).then((response) => {
+      console.log(response);
+      res.json({ status: true });
+    })
+  })
+
+router.route('/remove-cartItem')
+  .post(verifyLogin, (req, res) => {
+    console.log(req.body);
+    userHelper.removeCartItem(req.body.cartId, req.body.prodId).then((response) => {
+      console.log(response);
+      res.json(true);
+    })
+  })
 
 
 module.exports = router;

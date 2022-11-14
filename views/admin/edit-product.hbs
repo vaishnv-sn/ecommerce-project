@@ -22,15 +22,15 @@
 
                 <label for="pro_category">Categories</label>
                 <select name="pro_category" id="pro_category" class="form-control mb-4">
-                    <option value="none" selected disabled hidden>Select a Category</option>
-                    <option value="Sun Glass">Sun Glass</option>
-                    <option value="Computer Glass">Computer Glass</option>
-                    <option value="Eye Lenses">Eye Lenses</option>
+                    <option  value="{{product.pro_category" hidden selected>{{product.pro_category}}</option>
+                    {{#each categories}}
+                    <option value="{{this.category}}">{{this.category}}</option>
+                    {{/each}}
                 </select>
 
                 <label for="pro_gender">Gender</label>
                 <select name="pro_gender" id="pro_gender" class="form-control mb-4">
-                    <option value="none" selected disabled hidden>Select Gender</option>
+                    <option value="{{product.pro_gender}}" selected hidden>{{product.pro_gender}}</option>
                     <option value="Men">Men</option>
                     <option value="Women">Women</option>
                     <option value="unisex">Unisex</option>

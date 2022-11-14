@@ -1,0 +1,300 @@
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <form id="coupon-form">
+                <div class="coupon-discount box-shadow p-30 mb-50">
+                    <h6 class="widget-title border-left mb-20">coupon discount</h6>
+                    <p style="font-size: 14px;">Enter your coupon code if you have one!</p>
+                    <input type="text" name="coupon" placeholder="Enter your code here.">
+                    <button class="submit-btn-1 black-bg btn-hover-2" type="submit">apply coupon</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <form id="save-address">
+
+                <div class="billing-details box-shadow p-30 pr-10">
+                    <h6 class="widget-title border-left mb-20">Enter Delivery Details</h6> 
+                    <label>Name</label>
+                    <input type="text" placeholder="Your Name Here..."  name="name" value="">
+                    <label>Mobile</label>
+                    <input type="text" placeholder="10-digit mobile number"  name="mobile" value="">
+                    <label>Pincode</label>
+                    <input type="text" placeholder="Pincode here..."  name="pincode" value="">
+                    {{!-- <input type="text" name="userId" value="{{userlog._id}}" hidden> --}}
+                    <label>Locality</label>
+                    <input type="text" placeholder="Locality here..."  name="locality" value="">
+                    <label>State</label>
+                    <input type="text" placeholder="State here..."  name="state" value="">
+                    <label>Address</label>
+                    <input type="text" placeholder="Your address here..." id="address1" name="address" value="">
+                    <button class="btn btn-primary mt-3 float-right" style="width: fit-content;" type="submit">Save
+                        Address</button>
+                </div>
+
+
+            </form>
+        </div>
+
+        <div class="col-lg-6">
+            <form action="" id="checkout-form">
+                <div class="row">
+
+                    {{!-- --}}
+                    <div class="col-lg-12">
+                        <div class="col-md-12">
+                            <div class="payment-details box-shadow p-30 mb-50">
+                                <h6 class="widget-title border-left mb-20">payment details</h6>
+                                <table>
+                                    <tr>
+                                        <td class="td-title-1">Cart Subtotal</td>
+                                        <td class="td-title-2">₹{{total}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="td-title-1">Offer discount</td>
+                                        <td class="td-title-2" id="offer-price">₹0</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="order-total">Grand Total</td>
+                                        <td class="td-title-2" id="total-price">₹{{total}}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="payment-details box-shadow p-30 mb-50">
+                                <h6 class="widget-title border-left mb-20">payment method</h6>
+                                {{!-- <table>
+                                    <tr>
+                                        <td class="order-total">Total Amount</td>
+                                        <td class="order-total-price">$ {{total}}</td>
+                                    </tr>
+                                    <tr>
+                                    </tr>
+                                </table> --}}
+                                <div class="panel">
+                                    <h4 class="payment-title box-shadow">
+                                        <input type="radio" name="payment-method" value="COD" checked> COD
+                                    </h4>
+                                    <h4 class="payment-title box-shadow">
+                                        <input type="radio" name="payment-method" value="ONLINE-RAZOR"> Razorpay
+                                    </h4>
+                                    <h4 class="payment-title box-shadow">
+                                        <input type="radio" name="payment-method" value="ONLINE-PAYPAL"> Paypal
+                                    </h4>
+                                    <h4 class="payment-title box-shadow">
+                                        <input type="radio" onclick="balanceCheck('{{walletBalance}}','{{total}}')"
+                                            name="payment-method" value="WALLET"> Wallet Balance ₹{{walletBalance}}
+                                    </h4>
+                                    <input type="text" name="userId" value="{{userlog._id}}" hidden>
+                                    <button class="btn btn-primary mt-3 float-right" style="width: fit-content;"
+                                        type="submit">Checkout</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                     
+                    {{!-- <h1>SAVED ADDRESSES</h1> --}}
+                    <h6 class="widget-title border-left mb-20">SAVED ADDRESSES</h6>
+                    <div class="panel col-md-12 mb-5">
+                        {{#each useradd}}
+                        <h4 class="payment-title box-shadow">
+                            <input type="radio"  name="address"
+                                value="{{this._id}}"
+                                required> {{this.name}}, {{this.address}}, {{this.mobile}}, {{this.state}},{{this.pincode}}
+                        </h4><br>
+                        {{/each}}
+                    </div>
+                    {{!-- --}}
+                </div>
+           </form>
+        </div>
+    </div>
+
+
+
+
+</div>
+<!-- START FOOTER AREA -->
+
+<!-- END FOOTER AREA -->
+
+<!-- START QUICKVIEW PRODUCT -->
+
+<!-- END QUICKVIEW PRODUCT -->
+<script>
+    $("#checkout-form").submit((e) => {
+        e.preventDefault()
+
+        $.ajax({
+            url: '/place-order',
+            method: 'post',
+            data: $('#checkout-form').serialize(),
+            success: (response) => {
+                // alert(response)
+                if (response.codSuccess) {
+                    swal("Success!", "order created", "success").then(() => {
+                        location.href = '/order-success'
+                    })
+
+                } else if (response.razorSuccess) {
+                    razorpayPayment(response)
+                } else if (response.paypalSuccess) {
+                    //paypal
+                    for (let i = 0; i < response.links.length; i++) {
+                        if (response.links[i].rel === "approval_url") {
+                            location.href = response.links[i].href;
+                        }
+                    }
+                    //wallet
+                } else if (response.walletSuccess) {
+                    swal("Success!", "order created", "success").then(() => {
+                        location.href = '/order-success'
+                    })
+                } else if (response.walletLow) {
+                    swal("Info!", "Wallet insufficient balance", "warning").then(() => {
+                        // location.href = '/order-success'
+                    })
+                }
+            }
+        })
+    })
+
+    //razor section start
+    function razorpayPayment(order) {
+        var options = {
+            "key": "rzp_test_r54vlZ1MXEixsm", // Enter the Key ID generated from the Dashboard
+            "amount": order.amount, // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+            "currency": "INR",
+            "name": "Style Cart",
+            "description": "Test Transaction",
+            "image": "https://example.com/your_logo",
+            "order_id": order.id, //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
+            "handler": function (response) {
+
+                verifyPayment(response, order)
+            },
+            "prefill": {
+                "name": "Gaurav Kumar",
+                "email": "gaurav.kumar@example.com",
+                "contact": "9999999999"
+            },
+            "notes": {
+                "address": "Razorpay Corporate Office"
+            },
+            "theme": {
+                "color": "#3399cc"
+            }
+        };
+        var rzp1 = new Razorpay(options);
+        rzp1.open();
+    }
+    //razor section end
+    function verifyPayment(payment, order) {
+        $.ajax({
+            url: '/verify-payment',
+            data: {
+                payment,
+                order
+            },
+            method: 'post',
+            success: (response) => {
+                if (response.status) {
+                    swal("Success!", "order created", "success").then(() => {
+                        location.href = '/order-success'
+                    })
+                    // location.href = '/order-success'
+                } else {
+                    location.href = '/cancel'
+                    // alert('Payment failed')
+                }
+            }
+        })
+    }
+
+    $("#coupon-form").submit((e) => {
+        e.preventDefault()
+        $.ajax({
+            url: '/coupon',
+            method: 'post',
+            data: $('#coupon-form').serialize(),
+            success: (amount) => {
+                console.log(amount)
+                if (amount.status) {
+                    swal("Success!", "Coupon Applied", "success").then(() => {
+                        document.getElementById('offer-price').innerHTML = amount.discountamount
+                        document.getElementById('total-price').innerHTML = amount.grandtotal
+                    })
+                } else if (amount.used) {
+                    swal("Info!", "Coupon already used!", "warning").then(() => {
+                        document.getElementById('offer-price').innerHTML = 0
+
+                    })
+                } else if (amount.expired) {
+                    swal("Info!", "Coupon Expired", "warning").then(() => {
+                        document.getElementById('offer-price').innerHTML = 0
+
+                    })
+                } else if (amount.small) {
+                    swal("Info!", "Total amount should be within 2000 and 4000 to apply coupon", "warning").then(() => {
+                        document.getElementById('offer-price').innerHTML = 0
+
+                    })
+                } else {
+                    swal("Oops!", "Coupon does not exist", "error").then(() => {
+                        document.getElementById('offer-price').innerHTML = 0
+
+                    })
+                }
+            }
+        })
+    })
+
+    $("#save-address").submit((e) => {
+        e.preventDefault()
+
+        $.ajax({
+            url: '/save-address',
+            method: 'post',
+            data: $('#save-address').serialize(),
+            success: (response) => {
+                // alert(response)
+                swal("Success", "Address saved", "success").then(()=>{
+                        location.reload();
+                     })
+            }
+        })
+    })
+
+    function balanceCheck(bal, total) {
+        console.log("bal",bal)
+        console.log("total",total)
+        $.ajax({
+            url: "/balance-check",
+            data: {
+                balance: bal,
+                amount: document.getElementById('total-price').innerHTML
+            },
+            method: "post",
+            success: (response) => {
+                //alert("Product cancelled from orders");
+                if(response.walletLow){
+                     swal("Info!", "Insufficient  balance", "warning").then(()=>{
+                        location.reload();
+                     })
+                }else{
+                   
+                }
+                //location.reload();
+
+            },
+        });
+
+    }
+
+     
+</script>

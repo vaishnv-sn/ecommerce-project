@@ -16,9 +16,7 @@
             <a class='nav-item nav-link text-light' href='/'>Products</a>
             {{#if user}}
                 <a class='nav-item nav-link text-light' href='/cart'>Cart
-                {{#if cartCount}}
-                <span class='ml-1 badge badge-danger' id="cart-count">{{cartCount}}</span></a>
-                {{/if}}
+                    <span class='ml-1 badge badge-danger' id='cart-count'>{{cartCount}}</span></a>
                 <a class='nav-item nav-link text-light' href='#'>Orders</a>
             {{/if}}
         </div>
