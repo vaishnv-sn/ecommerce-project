@@ -7,19 +7,19 @@
           <form action="/admin/add-product" enctype="multipart/form-data" method="post">
 
             <label for="pro_title">Product Title</label>
-            <input type="text" name="pro_title" class="form-control mb-4">
+            <input type="text" name="pro_title" class="form-control mb-4" required>
 
             <label for="pro_description">Description</label>
-            <input type="text" name="pro_description" class="form-control mb-4">
+            <input type="text" name="pro_description" class="form-control mb-4" required>
 
             <label for="pro_price">Price</label>
-            <input type="number" name="pro_price" class="form-control mb-4">
+            <input type="number" name="pro_price" class="form-control mb-4" required>
 
             <label for="pro_image">Image</label>
-            <input type="file" name="pro_image" class="form-control mb-4">
+            <input type="file" name="pro_image" class="form-control mb-4" required>
 
             <label for="pro_category">Categories</label>
-            <select name="pro_category" id="pro_category" class="form-control mb-4">
+            <select name="pro_category" id="pro_category" class="form-control mb-4" required>
               <option value="" disabled selected hidden>Choose category</option>
               {{#each categories}}
               <option value="{{this.category}}">{{this.category}}</option>
@@ -27,7 +27,7 @@
             </select>
 
             <label for="pro_gender">Gender</label>
-            <select name="pro_gender" id="pro_gender" class="form-control mb-4">
+            <select name="pro_gender" id="pro_gender" class="form-control mb-4" required>
               <option value="" disabled selected hidden>Choose gender</option>
               <option value="male">Male</option>
               <option value="female">Female</option>
@@ -35,7 +35,7 @@
             </select>
 
             <label for="pro_stock">Stock count</label>
-            <input type="number" name="pro_stock" class="form-control mb-4">
+            <input type="number" name="pro_stock" class="form-control mb-4" required>
 
             <button type="submit" class="btn btn-success mt-4">Submit</button>
 

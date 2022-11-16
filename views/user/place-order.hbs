@@ -102,7 +102,9 @@
             method: 'post',
             data:  $('#addressForm').serialize(),
             success:(response)=>{
-                alert(response)
+                if(response.status){
+                    location.href = '/order-placed'
+                }
             }
             
         })

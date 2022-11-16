@@ -1,3 +1,7 @@
+
+
+
+{{#if cartProducts}}
 <div class='container mt-5 p-3 rounded cart'>
     <div class='row no-gutters'>
         <div class='col-md-8'>
@@ -69,7 +73,12 @@
         </div>        
     </div>
 </div>
+{{else}}
+<div class="col-12 d-flex" >
+<img class="mx-auto my-5" src="https://mir-s3-cdn-cf.behance.net/projects/404/95974e121862329.Y3JvcCw5MjIsNzIxLDAsMTM5.png" alt="">
 
+</div>
+{{/if}}
 <script>
     function changeQuantity(cartId, prodId,userId, count){
         console.log(userId)

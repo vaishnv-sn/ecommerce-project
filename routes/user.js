@@ -161,14 +161,12 @@ router.route('/otp-page')
 router.route('/cart')
   .get(verifyLogin, async function (req, res) {
     let cartProducts = await userHelper.getCartProducts(req.session.user._id);
-    // console.log(cartProducts);
     let cartTotal = await userHelper.getTotalCartAmount(req.session.user._id);
     res.render('user/cart', { user: req.session.user, cartProducts, cartTotal });
   })
 
 router.route('/add-to-cart/:id')
   .get(verifyLogin, (req, res) => {
-    // console.log('api called');
     userHelper.addToCart(req.params.id, req.session.user._id).then(() => {
       res.json({ status: true })
     });
@@ -199,12 +197,40 @@ router.route('/place-order')
 
 router.route('/remove-cartItem')
   .post(verifyLogin, (req, res) => {
-    console.log(req.body);
+    // console.log(req.body);
     userHelper.removeCartItem(req.body.cartId, req.body.prodId).then((response) => {
       console.log(response);
       res.json(true);
     })
   })
+
+router.route('/orders')
+  .get(verifyLogin, async (req, res) => {
+    await userHelper.getUserOrders(req.session.user._id).then(async (orders) => {
+      res.render('user/order', { user: req.session.user, orders })
+    })
+  })
+
+router.route('/order-details')
+  .get(verifyLogin, async (req, res) => {
+    await userHelper.getOrderedProducts().then((products) => {
+      res.render('user/orderDetails', { user: req.session.user, products })
+    })
+  })
+
+router.route('/order-placed')
+  .get(verifyLogin, (req, res) => {
+    res.render('user/orderPlaced', { user: req.session.user })
+  })
+
+router.route('/cancel-order')
+  .post(verifyLogin, (req, res) => {
+    // console.log(req.body);
+    userHelper.cancelOrder(req.body.orderId).then(() => {
+      res.json({ status: true })
+    })
+  })
+
 
 
 module.exports = router;

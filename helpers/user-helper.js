@@ -318,7 +318,12 @@ module.exports = {
   placeOrder: (orderDetails, products, total) => {
     return new Promise((resolve, reject) => {
       console.log(orderDetails);
-      let status = orderDetails.paymentMethod === 'COD' ? 'placed' : 'pending';
+      let status = orderDetails.paymentMethod === 'COD' ? 'Placed' : 'Pending';
+      var today = new Date();
+      let dd = String(today.getDate()).padStart(2, '0');
+      let yyyy = today.getFullYear();
+      let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+      today = dd + '/' + mm + '/' + yyyy;
       orderObj = {
         deliveryDetails: {
           name: orderDetails.name,
@@ -326,7 +331,7 @@ module.exports = {
           address: orderDetails.address,
           locality: orderDetails.locality,
           pincode: orderDetails.pincode,
-
+          date: today
         },
         userId: objectId(orderDetails.userId),
         paymentMethod: orderDetails.paymentMethod,
@@ -345,5 +350,68 @@ module.exports = {
       let cart = await db.get().collection(CART_COLLECTION).findOne({ user: objectId(userId) })
       resolve(cart.products);
     })
+  },
+  getUserOrders: (userId) => {
+    return new Promise(async (resolve, reject) => {
+      let orders = await db.get().collection(ORDER_COLLECTION).find({ userId: objectId(userId) }).toArray()
+      resolve(orders)
+    })
+  },
+  getOrderedProducts: (orderId) => {
+    return new Promise(async (resolve, reject) => {
+      let products = db.get().collection(ORDER_COLLECTION).aggregate([
+        {
+          $match: { _id: objectId(orderId) }
+        },
+        {
+          $unwind: '$products'
+        },
+        {
+
+          $project: {
+            item: '$products.item',
+            quantity: '$products.quantity'
+          }
+        },
+        {
+          $lookup: {
+            from: PRODUCT_COLLECTION,
+            localField: 'item',
+            foreignField: '_id',
+            as: 'product'
+          }
+        },
+        {
+          $project: {
+            item: 1,
+            quantity: 1,
+            product: { $arrayElemAt: ['$product', 0] }
+          }
+        }
+
+      ]).toArray()
+      resolve(products)
+    }).then((products) => {
+      console.log(products);
+    })
+  },
+  cancelOrder: (orderId) => {
+    console.log(orderId);
+    return new Promise((resolve, reject) => {
+      db.get().collection(ORDER_COLLECTION).updateOne(
+        {
+          _id: objectId(orderId)
+        },
+        {
+          $set: {
+            status: 'Cancelled'
+          }
+        }
+      )
+      resolve()
+    }).then((response) => {
+      console.log(response);
+    })
   }
 }
+

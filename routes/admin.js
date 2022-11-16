@@ -7,6 +7,19 @@ var categoryHelper = require('../helpers/category-helper')
 const e = require('express');
 // const { blockUser, unblockUser } = require('../helpers/admin-helper');
 const { adminRouteProtection, clearCache } = require('../Middlewares/routeProtection');
+const multer = require('multer');
+
+// handle storage using multer
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'public/images/product')
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname + '-' + Date.now())
+  }
+});
+
+const upload = multer({ storage: storage });
 
 
 /* GET admin login */
@@ -28,7 +41,7 @@ router.route('/')
         res.redirect('/admin')
       }
     })
-  })
+  });
 
 /* GET users listing. */
 router.route('/all-users')
@@ -37,7 +50,7 @@ router.route('/all-users')
       // console.log(users);
       res.render('admin/list-users', { users, admin: true })
     })
-  })
+  });
 
 // add user
 router.route('/add-user')
@@ -48,7 +61,7 @@ router.route('/add-user')
     userHelper.doSignup(req.body).then(
       res.redirect('/admin/add-user')
     )
-  })
+  });
 
 /* GET users listing. */
 router.route('/all-products')
@@ -57,7 +70,7 @@ router.route('/all-products')
       // console.log(products);
       res.render('admin/list-products', { admin: true, products })
     })
-  })
+  });
 
 /* Categories route */
 router.route('/categories')
@@ -70,7 +83,7 @@ router.route('/categories')
     categoryHelper.addCategory(req.body).then(() => {
       res.redirect('/admin/categories')
     })
-  })
+  });
 
 /* Delete Category route */
 router.route('/delete-category/:id')
@@ -78,7 +91,7 @@ router.route('/delete-category/:id')
     categoryHelper.deleteCategory(req.params.id).then(() => {
       res.redirect('/admin/categories')
     })
-  })
+  });
 
 
 /* Product adding route */
@@ -88,24 +101,31 @@ router.route("/add-product")
       res.render('admin/add-products', { categories, admin: true })
     })
   })
-  .post(function (req, res) {
-    productHelper.addProduct(req.body, (id) => {
-      let Image = req.files.pro_image;
-      Image.mv('./public/product-images/' + id + '.jpg', (err) => {
-        if (!err) {
-          res.redirect('/admin/add-product')
-        } else {
-          console.log(err);
-        }
-      })
+  .post(upload.array('Images', 4), function (req, res) {
+    const files = req.files
+
+    const file = files.map((file) => {
+      return file
     })
-  })
+
+    const fileName = file.map((file) => {
+      return file.fileName
+    })
+
+    const product = req.body
+    product.image = fileName
+
+    productHelper.addProduct(product).then(() => {
+      res.redirect('admin/list-products')
+    })
+
+  });
 
 // all orders route
 router.route("/all-orders")
   .get(adminRouteProtection, clearCache, function (req, res) {
     res.render('admin/all-orders', { admin: true })
-  })
+  });
 
 // delete product
 router.get('/delete-product/:id', clearCache, adminRouteProtection, (req, res) => {
@@ -156,7 +176,7 @@ router.get('/admin-logout', adminRouteProtection, (req, res) => {
   req.session.admin = false;
   req.session.adminLoggedIn = false;
   res.redirect('/admin')
-})
+});
 
 
 module.exports = router;

@@ -1,1 +1,42 @@
-<h1>All orders</h1>
+<div class="container bg-dark p-3 mt-2 " >
+  <h3 class="text-light mt-2 text-center font-weight-bold">Orders</h3>
+</div>
+
+<div class="container mt-5 ">
+
+  <table class="table m-5 table-striped " id="userTable">
+    <thead>
+      <tr>
+        <th scope="col">User Name</th>
+        <th scope="col">Date</th>
+        <th scope="col">Amount</th>
+        <th scope="col">Status</th>
+        <th scope="col">Options</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each orders}}
+        <tr class="text-dark">
+          <th class="text-dark" scope="row">{{this.pro_title}}</th>
+          <td class="text-dark" >{{this.pro_description}}</td>
+          <td class="text-dark">{{this.pro_price}}</td>
+          <td><img src="/product-images/{{this._id}}.jpg" style="width: 50px;height:50px" alt=""></td>
+          <td>
+            <a href="/admin/delete-product/{{this._id}}" onclick="return confirm('Are you sure to delete {{this.pro_title}}?')" class="btn btn-danger">Delete</a>
+            <a href="/admin/edit-product/{{this._id}}" class="btn btn-dark btn-rounded">Edit</a>
+          </td>
+        </tr>
+      {{/each}}
+    </tbody>
+  </table>
+</div>
+<div class=" container mt-5 text-right">
+      <a href="/admin/admin-logout" class="btn btn-danger px- text-right text-light" >Logout</a>
+</div>
+
+<script>
+$(document).ready( function () {
+  $('#userTable').DataTable();
+} );
+</script>
+
