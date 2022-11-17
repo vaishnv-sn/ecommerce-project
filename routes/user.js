@@ -19,9 +19,10 @@ router.route('/')
     if (req.session.user) {
       cartCount = await userHelper.getCartCount(req.session.user._id)
     }
+    let banners = await userHelper.getBanners()
+    console.log(banners);
     productHelper.getAllProducts().then((products) => {
-      console.log(products);
-      res.render('user/landingPage', { user: req.session.user, products, cartCount });
+      res.render('user/landingPage', { user: req.session.user, products, cartCount, banners });
     })
 
   });
@@ -231,6 +232,10 @@ router.route('/cancel-order')
     })
   })
 
+router.route('/sample')
+  .get((req, res) => {
+    res.render('admin/sample')
+  })
 
 
 module.exports = router;

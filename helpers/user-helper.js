@@ -1,5 +1,5 @@
 var db = require('../config/connection')
-const { USER_COLLECTION, CART_COLLECTION, PRODUCT_COLLECTION, ORDER_COLLECTION } = require('../config/collections');
+const { USER_COLLECTION, CART_COLLECTION, PRODUCT_COLLECTION, ORDER_COLLECTION, BANNER_COLLECTION } = require('../config/collections');
 const bcrypt = require('bcrypt');
 var objectId = require('mongodb').ObjectId
 const otp = require('../config/otp');
@@ -411,6 +411,12 @@ module.exports = {
       resolve()
     }).then((response) => {
       console.log(response);
+    })
+  },
+  getBanners: () => {
+    return new Promise(async (resolve, reject) => {
+      let banners = await db.get().collection(BANNER_COLLECTION).findOne({})
+      resolve(banners)
     })
   }
 }

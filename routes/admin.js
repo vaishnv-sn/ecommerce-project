@@ -194,6 +194,35 @@ router.route('/cancel-order')
     })
   })
 
+router.route('/add-banner')
+  .get(async (req, res) => {
+    await adminHelper.getBanners().then((banners) => {
+      console.log(banners);
+      res.render('admin/add-banner', { banners })
+
+    })
+  })
+  .post(
+    upload.fields([
+      { name: 'banner1', maxCount: 1 },
+      { name: 'banner2', maxCount: 1 },
+      { name: 'banner3', maxCount: 1 }
+    ]),
+    async (req, res) => {
+      let fileName = {}
+      fileName.banner1 = req.files.banner1[0].filename
+      fileName.banner2 = req.files.banner2[0].filename
+      fileName.banner3 = req.files.banner3[0].filename
+      await adminHelper.editBanners(fileName).then((response) => {
+        res.redirect('/admin/list-banner')
+      })
+    })
+
+router.route('/list-banner')
+  .get((req, res) => {
+    res.render('admin/list-banner')
+  })
+
 
 
 
