@@ -15,7 +15,7 @@ const storage = multer.diskStorage({
     cb(null, 'public/images/product')
   },
   filename: (req, file, cb) => {
-    cb(null, file.originalname + '-' + Date.now())
+    cb(null, Date.now() + '-' + file.originalname)
   }
 });
 
@@ -25,11 +25,15 @@ const upload = multer({ storage: storage });
 /* GET admin login */
 router.route('/')
   .get(function (req, res, next) {
-    res.render('admin/adminLogin', { adminLoginErr: req.session.adminLoginErr })
-    req.session.adminLoginErr = null;
+    if (req.session.adminLoggedIn) {
+      res.redirect('/admin/all-users')
+    } else {
+      res.render('admin/adminLogin', { adminLoginErr: req.session.adminLoginErr })
+      req.session.adminLoginErr = null;
+    }
   })
   .post(function (req, res) {
-    console.log(req.body);
+    // console.log(req.body);
     adminHelper.adminLogin(req.body).then((response) => {
       // console.log(response);
       if (response.adminStatus) {
@@ -101,30 +105,28 @@ router.route("/add-product")
       res.render('admin/add-products', { categories, admin: true })
     })
   })
-  .post(upload.array('Images', 4), function (req, res) {
-    const files = req.files
+  .post(upload.fields([{ name: 'image1', maxCount: 1 }, { name: 'image2', maxCount: 1 },]), function (req, res) {
 
-    const file = files.map((file) => {
-      return file
-    })
+    let product = req.body
+    product.image1 = req.files.image1[0].filename
+    product.image2 = req.files.image2[0].filename
+    console.log(product);
 
-    const fileName = file.map((file) => {
-      return file.fileName
-    })
 
-    const product = req.body
-    product.image = fileName
-
-    productHelper.addProduct(product).then(() => {
-      res.redirect('admin/list-products')
+    productHelper.addProduct(product).then((data) => {
+      // console.log(data)
+      res.redirect('/admin/all-products')
     })
 
   });
 
 // all orders route
 router.route("/all-orders")
-  .get(adminRouteProtection, clearCache, function (req, res) {
-    res.render('admin/all-orders', { admin: true })
+  .get(adminRouteProtection, clearCache, async function (req, res) {
+    await adminHelper.getAllOrders().then((orders) => {
+      console.log(orders);
+      res.render('admin/all-orders', { admin: req.session.admin, orders })
+    })
   });
 
 // delete product
@@ -141,16 +143,22 @@ router.route('/edit-product/:id')
   .get(adminRouteProtection, clearCache, async (req, res) => {
     await productHelper.getProductDetails(req.params.id).then(async (product) => {
       let categories = await categoryHelper.getAllCategory(req.params.id)
-      res.render('admin/edit-product', { product, admin: true, categories })
+      // console.log(categories);
+      res.render('admin/edit-product', { product, admin: req.session.admin, categories })
     })
   })
-  .post((req, res) => {
+  .post(upload.fields([{ name: 'image1', maxCount: 1 }, { name: 'image2', maxCount: 1 }]), (req, res) => {
+    console.log(req.files);
     productHelper.updateProduct(req.params.id, req.body).then(() => {
-      res.redirect('/admin/all-products')
-      // console.log(req.files.pro_image);
-      if (req.files?.pro_image) {
-        req.files.pro_image.mv('./public/product-images/' + req.params.id + '.jpg')
+      if (req.files.image1 && req.files.image2) {
+        productHelper.editImages(req.params.id, req.files.image1[0].filename, req.files.image2[0].filename)
+      } else if (req.files.image1 && !req.files.image2) {
+        productHelper.editImage1(req.params.id, req.files.image1[0].filename)
+      } else if (req.files.image2 && !req.files.image1) {
+        productHelper.editImage2(req.params.id, req.files.image2[0].filename)
       }
+    }).then(() => {
+      res.redirect('/admin/all-products')
     })
   });
 
@@ -177,6 +185,16 @@ router.get('/admin-logout', adminRouteProtection, (req, res) => {
   req.session.adminLoggedIn = false;
   res.redirect('/admin')
 });
+
+router.route('/cancel-order')
+  .post(adminRouteProtection, (req, res) => {
+    console.log(req.body);
+    adminHelper.cancelOrder(req.body.orderId).then(() => {
+      res.json({ status: true })
+    })
+  })
+
+
 
 
 module.exports = router;

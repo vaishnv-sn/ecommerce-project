@@ -17,7 +17,7 @@
                 <tbody>
                     {{#each cartProducts}}
                         <tr>
-                            <td><img style='width: 70px; height:70px;' src='/product-images/{{this.product._id}}.jpg' alt='product img'/></td>
+                            <td><img style='width: 70px; height:70px;' src='/images/product/{{this.product.image1}}' alt='product img'/></td>
                             <td>{{this.product.pro_title}}</td>
                             <td>
                                 <button class='cart-item-count mr-3 border-0' onclick="changeQuantity('{{this._id}}','{{this.product._id}}','{{../user._id}}',-1)">-</button>

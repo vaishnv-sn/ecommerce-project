@@ -1,4 +1,4 @@
-<div class="container mt-4">
+{{!-- <div class="container mt-4">
     <div class="row">
         <div class="col-md-6">
             <h2 class="text-center">Edit Product</h2>
@@ -13,16 +13,17 @@
 
                 <label for="pro_price">Price</label>
                 <input type="number" name="pro_price" class="form-control mb-4" value="{{product.pro_price}}" />
+
                 <div class="mt-5">
-                    <label for="pro_image">Image</label>
+                    <label for="pro_images">Image</label>
                     <br>
-                    <img src="/product-images/{{product._id}}.jpg" alt="product image" style="width: 100px; height:auto; border-style: dotted; border-width: 1px;" />
-                    <input type="file" name="pro_image" value="/product-images/{{product._id}}.jpg" class="form-control mb-4" />
+                    <img src="/images/product/{{product.pro_image.[0]}}" alt="product image" style="width: 100px; height:auto; border-style: dotted; border-width: 1px;" />
+                    <input type="file" id="pro_images" name="pro_images" value="/images/product/{{product.pro_images.[0]}}" class="form-control mb-4" multiple />
                 </div>
 
                 <label for="pro_category">Categories</label>
                 <select name="pro_category" id="pro_category" class="form-control mb-4">
-                    <option  value="{{product.pro_category" hidden selected>{{product.pro_category}}</option>
+                    <option value="{{product.pro_category}}" selected hidden>{{product.pro_category}}</option>
                     {{#each categories}}
                     <option value="{{this.category}}">{{this.category}}</option>
                     {{/each}}
@@ -40,8 +41,64 @@
                 <input type="number" name="pro_stock" class="form-control mb-4" value="{{product.pro_stock}}" />
 
                 <button type="submit" class="btn btn-success mt-4">Submit</button>
-
             </form>
+        </div>
+    </div>
+</div> --}}
+
+<div class="container mt4">
+    <div class="row">
+        <div class="col-md-6">
+            <h2 class="text-center">Edit Product</h2>
+            <form action="/admin/edit-product/{{product._id}}" enctype="multipart/form-data" method="post">
+                <label for="pro_title">Product Title</label>
+                <input type="text" id="pro_title" name="pro_title" class="form-control mb-4" value="{{product.pro_title}}" />
+                
+                <label for="pro_description">Description</label>
+                <input type="text" id="pro_description" name="pro_description" class="form-control mb-4" value="{{product.pro_description}}" />
+
+                <label for="pro_price">Offer Price</label>
+                <input type="number" id="pro_price" name="pro_price" class="form-control mb-4" value="{{product.pro_price}}" />
+
+                <label for="pro_offerPrice">Price</label>
+                <input type="number" id="pro_offerPrice" name="pro_offerPrice" class="form-control mb-4" value="{{product.pro_offerPrice}}" />
+
+                <div class="mt-5">
+                    <label for="image1">Image</label>
+                    <br>
+                    <img src="/images/product/{{product.image1}}" alt="product image" style="width: 100px; height:auto; border-style: dotted; border-width: 1px;" />
+                    <input type="file" id="image1" name="image1" value="/images/product/{{product.pro_images.[0]}}" class="form-control mb-4" multiple />
+                </div>
+
+                 <div class="mt-5">
+                    <label for="image2">Image</label>
+                    <br>
+                    <img src="/images/product/{{product.image2}}" alt="product image" style="width: 100px; height:auto; border-style: dotted; border-width: 1px;" />
+                    <input type="file" id="image2" name="image2" value="/images/product/{{product.pro_images.[0]}}" class="form-control mb-4" multiple />
+                </div>
+
+                <label for="pro_category">Categories</label>
+                <select name="pro_category" id="pro_category" class="form-control mb-4">
+                    <option value="{{product.pro_category}}" selected hidden>{{product.pro_category}}</option>
+                    {{#each categories}}
+                    <option value="{{this.category}}">{{this.category}}</option>
+                    {{/each}}
+                </select>
+
+                <label for="pro_gender">Gender</label>
+                <select name="pro_gender" id="pro_gender" class="form-control mb-4">
+                    <option value="{{product.pro_gender}}" selected hidden>{{product.pro_gender}}</option>
+                    <option value="Men">Men</option>
+                    <option value="Women">Women</option>
+                    <option value="unisex">Unisex</option>
+                </select>
+
+                <label for="pro_stock">Stock count</label>
+                <input type="number" id="pro_stock" name="pro_stock" class="form-control mb-4" value="{{product.pro_stock}}" />
+
+                <button type="submit" class="btn btn-success mt-4">Submit</button>
+            </form>
+
         </div>
     </div>
 </div>

@@ -11,20 +11,24 @@
         <th scope="col">Date</th>
         <th scope="col">Amount</th>
         <th scope="col">Status</th>
-        <th scope="col">Options</th>
+        <th scope="col">Details</th>
+        <th scope="col">Cancellation</th>
       </tr>
     </thead>
     <tbody>
       {{#each orders}}
         <tr class="text-dark">
-          <th class="text-dark" scope="row">{{this.pro_title}}</th>
-          <td class="text-dark" >{{this.pro_description}}</td>
-          <td class="text-dark">{{this.pro_price}}</td>
-          <td><img src="/product-images/{{this._id}}.jpg" style="width: 50px;height:50px" alt=""></td>
+          <th class="text-dark" scope="row">{{this.deliveryDetails.name}}</th>
+          <td class="text-dark" >{{this.deliveryDetails.date}}</td>
+          <td class="text-dark">{{this.totalAmount}}</td>
+          <td class="text-dark">{{this.status}}</td>
           <td>
-            <a href="/admin/delete-product/{{this._id}}" onclick="return confirm('Are you sure to delete {{this.pro_title}}?')" class="btn btn-danger">Delete</a>
-            <a href="/admin/edit-product/{{this._id}}" class="btn btn-dark btn-rounded">Edit</a>
+            <button onclick="" class="btn btn-info">View Details</button>
           </td>
+          <td>
+            <button onclick="cancelOrder('{{this._id}}')" class="btn btn-danger">Cancel</button>
+          </td>
+          
         </tr>
       {{/each}}
     </tbody>
@@ -38,5 +42,22 @@
 $(document).ready( function () {
   $('#userTable').DataTable();
 } );
+
+function cancelOrder(orderId){
+  console.log(orderId)
+  $.ajax({
+    url: '/admin/cancel-order',
+    data: {orderId:orderId},
+    method: 'post',
+    success: (response)=>{
+      console.log(response);
+      if(response.status){
+        location.reload()
+      }
+    }
+
+  })
+}
+
 </script>
 

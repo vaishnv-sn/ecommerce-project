@@ -1,5 +1,5 @@
 var db = require('../config/connection')
-const { USER_COLLECTION, ADMIN_COLLECTION } = require('../config/collections');
+const { USER_COLLECTION, ADMIN_COLLECTION, ORDER_COLLECTION } = require('../config/collections');
 var objectId = require('mongodb').ObjectId
 const bcrypt = require('bcrypt');
 
@@ -42,18 +42,42 @@ module.exports = {
         bcrypt.compare(adminData.password, admin.password).then((status) => {
           if (status) {
             console.log("login successful");
-            response.admin=admin
-            response.adminStatus =true
+            response.admin = admin
+            response.adminStatus = true
             resolve(response)
           } else {
             console.log("login failed");
-            resolve({adminStatus:false})
+            resolve({ adminStatus: false })
           }
         })
       } else {
         console.log("Login failed");
-        resolve({adminStatus:false})
+        resolve({ adminStatus: false })
       }
+    })
+  },
+  getAllOrders: () => {
+    return new Promise(async (resolve, reject) => {
+      let orders = await db.get().collection(ORDER_COLLECTION).find().toArray()
+      resolve(orders)
+    })
+  },
+  cancelOrder: (orderId) => {
+    console.log(orderId);
+    return new Promise(async (resolve, reject) => {
+      await db.get().collection(ORDER_COLLECTION).updateOne(
+        {
+          _id: objectId(orderId)
+        },
+        {
+          $set: {
+            status: 'Cancelled'
+          }
+        }
+      ).then((data) => {
+        console.log(data);
+        resolve()
+      })
     })
   }
 

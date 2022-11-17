@@ -20,7 +20,7 @@ router.route('/')
       cartCount = await userHelper.getCartCount(req.session.user._id)
     }
     productHelper.getAllProducts().then((products) => {
-      // console.log(products);
+      console.log(products);
       res.render('user/landingPage', { user: req.session.user, products, cartCount });
     })
 

@@ -5,7 +5,8 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var hbs = require('express-handlebars');
 var session = require('express-session');
-var fileUpload = require('express-fileupload')
+var bodyParser = require('body-parser')
+
 
 var db = require('./config/connection');
 
@@ -21,7 +22,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
 
 // setting default layout in hbs
-app.engine('hbs',hbs.engine({extname:'hbs', defaultLayout:'layout', layoutsDir: __dirname+'/views/layout/',partialsDir:__dirname+'/views/layout/partials/'}))
+app.engine('hbs', hbs.engine({ extname: 'hbs', defaultLayout: 'layout', layoutsDir: __dirname + '/views/layout/', partialsDir: __dirname + '/views/layout/partials/' }))
 
 
 app.use(logger('dev'));
@@ -29,16 +30,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(fileUpload())
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // setting cookie and session
 app.use(session({
-  secret:'key',
+  secret: 'key',
   cookie: {
-    maxAge:600000
+    maxAge: 600000
   },
-  saveUninitialized:true,
-  resave:true
+  saveUninitialized: true,
+  resave: true
 }));
 
 db.connect((err) => {
@@ -50,12 +52,12 @@ app.use('/', usersRouter);
 app.use('/admin', adminsRouter);
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   next(createError(404));
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};

@@ -4,10 +4,13 @@ var objectId = require('mongodb').ObjectId
 
 module.exports = {
 
-    addProduct: (product, callback) => {
-        db.get().collection(PRODUCT_COLLECTION).insertOne(product).then((data) => {
-            callback(data.insertedId)
+    addProduct: (product) => {
+        return new Promise((resolve, reject) => {
+            db.get().collection(PRODUCT_COLLECTION).insertOne(product).then((data) => {
+                resolve(data)
+            })
         })
+
     },
     getAllProducts: () => {
         return new Promise(async (resolve, reject) => {
@@ -30,7 +33,7 @@ module.exports = {
         })
     },
     updateProduct: (prodId, productDetails) => {
-        console.log(productDetails);
+        // console.log(productDetails);
         // console.log(image);
         return new Promise((resolve, reject) => {
             db.get().collection(PRODUCT_COLLECTION)
@@ -38,6 +41,7 @@ module.exports = {
                     $set: {
                         pro_title: productDetails.pro_title,
                         pro_description: productDetails.pro_description,
+                        pro_offerPrice: productDetails.pro_offerPrice,
                         pro_price: productDetails.pro_price,
                         pro_stock: productDetails.pro_stock,
                         pro_category: productDetails.pro_category,
@@ -46,6 +50,64 @@ module.exports = {
                 }).then((renponse) => {
                     resolve()
                 })
+        })
+    },
+    editImages: (prodId, fileName1, fileName2) => {
+        console.log(fileName1);
+        console.log(prodId);
+        return new Promise((resolve, reject) => {
+            db.get().collection(PRODUCT_COLLECTION).updateOne(
+                {
+                    _id: objectId(prodId)
+                },
+                {
+                    $set: {
+                        'image1': fileName1,
+                        'image2': fileName2
+                    }
+                }
+            ).then((data) => {
+                console.log(data);
+                resolve()
+            })
+        })
+    },
+    editImage1: (prodId, fileName1) => {
+        console.log(fileName1);
+        console.log(prodId);
+        return new Promise((resolve, reject) => {
+            db.get().collection(PRODUCT_COLLECTION).updateOne(
+                {
+                    _id: objectId(prodId)
+                },
+                {
+                    $set: {
+                        'image1': fileName1
+                    }
+                }
+            ).then((data) => {
+                console.log(data);
+                resolve()
+            })
+        })
+    },
+    editImage2: (prodId, fileName2) => {
+        console.log(fileName2);
+        console.log(prodId);
+        return new Promise((resolve, reject) => {
+            db.get().collection(PRODUCT_COLLECTION).updateOne(
+                {
+                    _id: objectId(prodId)
+                },
+                {
+                    $set: {
+                        'image2': fileName2
+                    }
+                }
+            ).then((data) => {
+                console.log(data);
+                resolve()
+            })
         })
     }
 
