@@ -1,5 +1,77 @@
 <style>
-    .card{border:none}.product{background-color: #eee}.brand{font-size: 13px}.act-price{color:red;font-weight: 700}.dis-price{text-decoration: line-through}.about{font-size: 14px}.color{margin-bottom:10px}label.radio{cursor: pointer}label.radio input{position: absolute;top: 0;left: 0;visibility: hidden;pointer-events: none}label.radio span{padding: 2px 9px;border: 2px solid #ff0000;display: inline-block;color: #ff0000;border-radius: 3px;text-transform: uppercase}label.radio input:checked+span{border-color: #ff0000;background-color: #ff0000;color: #fff}.btn-danger{background-color: #ff0000 !important;border-color: #ff0000 !important}.btn-danger:hover{background-color: #da0606 !important;border-color: #da0606 !important}.btn-danger:focus{box-shadow: none}.cart i{margin-right: 10px}
+    .card {
+        border: none
+    }
+
+    .product {
+        background-color: #eee
+    }
+
+    .brand {
+        font-size: 13px
+    }
+
+    .act-price {
+        color: red;
+        font-weight: 700
+    }
+
+    .dis-price {
+        text-decoration: line-through
+    }
+
+    .about {
+        font-size: 14px
+    }
+
+    .color {
+        margin-bottom: 10px
+    }
+
+    label.radio {
+        cursor: pointer
+    }
+
+    label.radio input {
+        position: absolute;
+        top: 0;
+        left: 0;
+        visibility: hidden;
+        pointer-events: none
+    }
+
+    label.radio span {
+        padding: 2px 9px;
+        border: 2px solid #ff0000;
+        display: inline-block;
+        color: #ff0000;
+        border-radius: 3px;
+        text-transform: uppercase
+    }
+
+    label.radio input:checked+span {
+        border-color: #ff0000;
+        background-color: #ff0000;
+        color: #fff
+    }
+
+    .btn-danger {
+        background-color: #ff0000 !important;
+        border-color: #ff0000 !important
+    }
+
+    .btn-danger:hover {
+        background-color: #da0606 !important;
+        border-color: #da0606 !important
+    }
+
+    .btn-danger:focus {
+        box-shadow: none
+    }
+
+    .cart i {
+        margin-right: 10px
+    }
 </style>
 <div class="container mt-5 mb-5">
     <div class="row d-flex justify-content-center">
@@ -7,26 +79,39 @@
             <div class="card ">
                 <div class="row">
                     <div class="col-md-6">
-                        <div class="images p-3 border">
-                            <div class="text-center p-4 "> <img id="main-image" src="/images/product/{{product.image1}}" width="250" /> </div>
-                            <div class="thumbnail text-center"> <img onclick="change_image(this)" src="/images/product/{{product.image1}}" width="70" class="border"> <img class="border" onclick="change_image(this)" src="/images/product/{{product.image2}}" width="70"> </div>
+                        <div class="images p-3 border ">
+                            <div class="text-center p-4" id="img-container" style="z-index:1;">
+                                <img id="main-image" width="250" />
+                            </div>
+                            <div class="thumbnail text-center">
+                                <img class="smallImg" src="/images/product/{{product.image1}}" width="70"
+                                    class="border">
+                                <img class="border smallImg" src="/images/product/{{product.image2}}" width="70">
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="product p-4">
-                           
+
                             <div class="mt-4 mb-3">
                                 <h5 class="text-uppercase m-0">{{product.pro_title}}</h5>
                                 <p class="text-muted mb-3">{{product.pro_category}}</p>
-                                <div class="price d-flex flex-row align-items-center"> <span class="act-price">₹{{product.pro_price}}</span>
-                                    <div class="ml-2"> <small class="dis-price">₹{{product.pro_offerPrice}}</small> </div>
+                                <div class="price d-flex flex-row align-items-center"> <span
+                                        class="act-price">₹{{product.pro_price}}</span>
+                                    <div class="ml-2"> <small class="dis-price">₹{{product.pro_offerPrice}}</small>
+                                    </div>
                                 </div>
                             </div>
                             <p class="about m-0">Details: {{product.pro_description}}</p>
                             <p class="about m-0">Suitable for: <span class="text-info">{{product.pro_gender}}</span></p>
-                            <p class="about m-0">Availiable stock: <span class="text-danger">{{product.pro_stock}}</span></p>
-                            
-                            <div class="cart mt-4 align-items-center"> <button class="btn btn-danger text-uppercase mr-2 px-4">Add to cart</button> <i class="fa fa-heart text-muted"></i> <i class="fa fa-share-alt text-muted"></i> </div>
+                            {{#if product.pro_stock}}
+                            <p class="about m-0">Hurry up, Only <span class="text-danger">{{product.pro_stock}}</span>
+                                stock availiable!!</p>
+                            {{/if}}
+                            <div class="cart mt-4 align-items-center"> <button
+                                    class="btn btn-danger text-uppercase mr-2 px-4">Add to cart</button> <i
+                                    class="fa fa-heart text-muted"></i> <i class="fa fa-share-alt text-muted"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -35,15 +120,47 @@
     </div>
 </div>
 
+<script src="https://unpkg.com/js-image-zoom@0.4.1/js-image-zoom.js" type="application/javascript"></script>
+<script src="https://cdn.jsdelivr.net/npm/js-image-zoom/js-image-zoom.min.js"></script>
 <script>
-function change_image(image){
 
-    var container = document.getElementById("main-image");
+    //function change_image(image){
+    //    var container = document.getElementById("main-image");
+    //    container.src = image.src;
+    //}
 
-    container.src = image.src;
+    var mainImg = document.getElementById('main-image')
+    var smallImg = document.getElementsByClassName('smallImg')
+
+    mainImg.src = smallImg[0].src
+
+    smallImg[0].onclick = function () {
+        mainImg.src = smallImg[0].src
+        const options = {
+            width: 300,
+            height: 250,
+            zoomWidth: 500,
+            scale: 1.2
+        }
+        new ImageZoom(document.getElementById("img-container"), options)
     }
-    document.addEventListener("DOMContentLoaded", function(event) {
+
+    smallImg[1].onclick = function () {
+        mainImg.src = smallImg[1].src
+
+        const options = {
+            width: 300,
+            height: 250,
+            zoomWidth: 500,
+            scale: 1.2
+        }
+        new ImageZoom(document.getElementById("img-container"), options)
+    }
+
+    //document.addEventListener("DOMContentLoaded", function(event) {
+    //});
 
 
-    });
+
+
 </script>

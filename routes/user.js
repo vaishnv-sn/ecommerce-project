@@ -16,13 +16,15 @@ const { clearCache, verifyLogin } = require("../Middlewares/routeProtection");
 router.route('/')
   .get(async function (req, res) {
     let cartCount = null
+    let wishlistCount = null
     if (req.session.user) {
       cartCount = await userHelper.getCartCount(req.session.user._id)
+      wishlistCount = await userHelper.getWishlistCount(req.session.user._id)
     }
     let banners = await userHelper.getBanners()
     console.log(banners);
     productHelper.getAllProducts().then((products) => {
-      res.render('user/landingPage', { user: req.session.user, products, cartCount, banners });
+      res.render('user/landingPage', { user: req.session.user, products, cartCount, banners, wishlistCount });
     })
 
   });
@@ -163,6 +165,9 @@ router.route('/cart')
   .get(verifyLogin, async function (req, res) {
     let cartProducts = await userHelper.getCartProducts(req.session.user._id);
     let cartTotal = await userHelper.getTotalCartAmount(req.session.user._id);
+    console.log(cartProducts);
+    console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
+    console.log(cartTotal);
     res.render('user/cart', { user: req.session.user, cartProducts, cartTotal });
   })
 
@@ -231,6 +236,31 @@ router.route('/cancel-order')
       res.json({ status: true })
     })
   })
+
+router.route('/wishlist')
+  .get(verifyLogin, (req, res) => {
+    res.render('user/wishlist', { user: req.session.user })
+  })
+
+router.route('/add-to-wishlist/:id')
+  .get(verifyLogin, (req, res) => {
+    userHelper.addToWishlist(req.params.id, req.session.user._id).then(() => {
+      res.json({ status: true })
+    })
+  })
+
+router.route('/remove-from-wishlist/:id')
+  .get(verifyLogin, (req, res) => {
+    console.log('hitted');
+    userHelper.removeFromWishlist(req.params.id, req.session.user._id).then(() => {
+      res.json({ status: true })
+    })
+  })
+
+
+
+
+
 
 router.route('/sample')
   .get((req, res) => {

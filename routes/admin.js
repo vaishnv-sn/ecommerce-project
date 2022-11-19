@@ -197,7 +197,7 @@ router.route('/cancel-order')
 router.route('/add-banner')
   .get(async (req, res) => {
     await adminHelper.getBanners().then((banners) => {
-      console.log(banners);
+      // console.log(banners);
       res.render('admin/add-banner', { banners })
 
     })

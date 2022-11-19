@@ -1,5 +1,5 @@
 var db = require('../config/connection')
-const { USER_COLLECTION, CART_COLLECTION, PRODUCT_COLLECTION, ORDER_COLLECTION, BANNER_COLLECTION } = require('../config/collections');
+const { USER_COLLECTION, CART_COLLECTION, PRODUCT_COLLECTION, ORDER_COLLECTION, BANNER_COLLECTION, WISHLIST_COLLECTION } = require('../config/collections');
 const bcrypt = require('bcrypt');
 var objectId = require('mongodb').ObjectId
 const otp = require('../config/otp');
@@ -240,19 +240,7 @@ module.exports = {
       }
     })
   },
-  deleteCartProduct: (cartId, proId) => {
-    return new Promise((resolve, reject) => {
-      db.get()
-        .collection(CART_COLLECTION)
-        .updateOne({ _id: objectId(cartId) },
-          {
-            $pull: { products: { item: objectId(proId) } }
-          }).then((response) => {
-            response.removed = true
-            resolve(response)
-          })
-    })
-  },
+
   getTotalCartAmount: (userId) => {
     return new Promise(async (resolve, reject) => {
       // let quantity = parseInt(quantity)
@@ -418,6 +406,72 @@ module.exports = {
       let banners = await db.get().collection(BANNER_COLLECTION).findOne({})
       resolve(banners)
     })
+  },
+  addToWishlist: (prodId, userId) => {
+    console.log(prodId);
+    console.log(userId);
+    return new Promise(async (resolve, reject) => {
+      let userWishlist = await db.get().collection(WISHLIST_COLLECTION).findOne({ user: objectId(userId) })
+      console.log(userWishlist);
+      if (userWishlist) {
+        db.get().collection(WISHLIST_COLLECTION)
+          .updateOne(
+            {
+              user: objectId(userId)
+            },
+            {
+              $addToSet: {
+                products: objectId(prodId)
+              }
+            }
+          ).then((data) => {
+            if (data.modifiedCount) {
+              resolve()
+            }
+          })
+      } else {
+        let wishlistObj = {
+          user: objectId(userId),
+          products: [objectId(prodId)]
+        }
+        db.get().collection(WISHLIST_COLLECTION)
+          .insertOne(wishlistObj).then((data) => {
+            console.log(data);
+            resolve()
+          })
+      }
+    })
+  },
+  removeFromWishlist: (prodId, userId) => {
+    console.log(prodId);
+    console.log(userId);
+    return new Promise(async (resolve, reject) => {
+      await db.get().collection(WISHLIST_COLLECTION)
+        .updateOne(
+          {
+            user: objectId(userId)
+          },
+          {
+            $pull: {
+              products: objectId(prodId)
+            }
+          }
+        ).then((data) => {
+          if (data.modifiedCount) {
+            resolve()
+          }
+        })
+    })
+  },
+  getWishlistCount: (userId) => {
+    return new Promise(async (resolve, reject) => {
+      let count = 0;
+      let wishlist = await db.get().collection(WISHLIST_COLLECTION).findOne({ user: objectId(userId) });
+      // console.log(cart);
+      if (wishlist) {
+        count = wishlist.products.length
+      }
+      resolve(count)
+    })
   }
 }
-

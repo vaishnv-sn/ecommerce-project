@@ -7,7 +7,6 @@ var hbs = require('express-handlebars');
 var session = require('express-session');
 var bodyParser = require('body-parser')
 
-
 var db = require('./config/connection');
 
 var app = express();
