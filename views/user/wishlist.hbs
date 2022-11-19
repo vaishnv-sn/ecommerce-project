@@ -1,1 +1,44 @@
-<h1>Wishlist</h1>
+<div class='container mt-5 p-3 rounded cart'>
+    <div class='row no-gutters'>
+        <div class='col-md-8'>
+            <table class='table mt-5'>
+                <tbody>
+                    {{#each wishlist}}
+                    <tr>
+                        <td>
+                            <img src="/images/product/{{this.product.image1}}" alt="" height="80">
+                        </td>
+                        <td>
+                            <div>{{this.product.pro_title}}</div>
+                            <small class="text-muted">{{this.product.pro_description}}</small>
+                            <div class="text-success">₹{{this.product.pro_offerPrice}}</div>
+                        </td>
+                        <td>
+                            <a class="btn btn-info" href="/view-product/{{this.product._id}}">View Details</a>
+                        </td>
+                        <td>
+                            <button class="btn btn-danger fa fa-trash" style="height: 35px;"
+                                onclick="removeproductWishlist('{{this.product._id}}')"></button>
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function removeproductWishlist(prodId) {
+        console.log(prodId)
+        $.ajax({
+            url: '/remove-from-wishlist/' + prodId,
+            method: 'get',
+            success: (response) => {
+                if (response.status) {
+                    location.reload()
+                }
+            }
+        })
+    }
+</script>

@@ -238,8 +238,10 @@ router.route('/cancel-order')
   })
 
 router.route('/wishlist')
-  .get(verifyLogin, (req, res) => {
-    res.render('user/wishlist', { user: req.session.user })
+  .get(verifyLogin, async (req, res) => {
+    let wishlist = await userHelper.getWishlistProducts(req.session.user._id)
+    console.log(wishlist);
+    res.render('user/wishlist', { user: req.session.user, wishlist })
   })
 
 router.route('/add-to-wishlist/:id')

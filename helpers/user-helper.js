@@ -473,5 +473,33 @@ module.exports = {
       }
       resolve(count)
     })
+  },
+  getWishlistProducts: (userId) => {
+    return new Promise(async (resolve, reject) => {
+      let wishlistProducts = await db.get().collection(WISHLIST_COLLECTION).aggregate([
+        {
+          $match: { user: objectId(userId) }
+        },
+        {
+          $unwind: '$products'
+        },
+        {
+          $lookup: {
+            from: PRODUCT_COLLECTION,
+            localField: 'products',
+            foreignField: '_id',
+            as: 'product'
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            product: { $arrayElemAt: ['$product', 0] }
+          }
+        }
+
+      ]).toArray()
+      resolve(wishlistProducts)
+    })
   }
 }
