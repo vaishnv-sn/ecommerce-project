@@ -5,6 +5,12 @@ var objectId = require('mongodb').ObjectId
 const otp = require('../config/otp');
 const { response } = require('express');
 const client = require('twilio')(otp.accountSID, otp.authToken)
+const razorpay = require('razorpay');
+
+var instance = new razorpay({
+  key_id: 'rzp_test_FhG5qtJmHWybtq',
+  key_secret: 'JCorSRosrNLhJkdmREMshtJm',
+});
 
 
 module.exports = {
@@ -329,7 +335,7 @@ module.exports = {
       },
         db.get().collection(ORDER_COLLECTION).insertOne(orderObj).then((response) => {
           db.get().collection(CART_COLLECTION).deleteOne({ user: objectId(orderDetails.userId) });
-          resolve(response);
+          resolve(response.insertedId);
         })
     })
   },
@@ -500,6 +506,58 @@ module.exports = {
 
       ]).toArray()
       resolve(wishlistProducts)
+    })
+  },
+  generateRazorpay: (orderId, totalPrice) => {
+    console.log('' + orderId, totalPrice);
+    return new Promise((resolve, reject) => {
+      instance.orders.create({
+        amount: totalPrice * 100,
+        currency: "INR",
+        receipt: '' + orderId,
+      }, (err, order) => {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log(order);
+          resolve(order)
+        }
+      })
+    })
+  },
+  verifyPayment: (details) => {
+    return new Promise((resolve, reject) => {
+      const crypto = require('crypto');
+      let hmac = crypto.createHmac('sha256', 'JCorSRosrNLhJkdmREMshtJm')
+
+      hmac.update(details['payment[razorpay_order_id]'] + '|' + details['payment[razorpay_payment_id]'])
+      hmac = hmac.digest('hex')
+
+      if (hmac == details['payment[razorpay_signature]']) {
+        resolve()
+      } else {
+        reject()
+      }
+    })
+  },
+  changePaymentStatus: (orderId) => {
+    console.log(orderId + 'orderId');
+    return new Promise(async (resolve, reject) => {
+      await db.get().collection(ORDER_COLLECTION)
+        .updateOne(
+          {
+            _id: objectId(orderId)
+          },
+          {
+            $set: {
+              status: 'Placed'
+            }
+          }
+        ).then((data) => {
+          console.log(data + 'status updation');
+          resolve()
+        })
+      reject()
     })
   }
 }

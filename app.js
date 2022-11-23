@@ -21,7 +21,17 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
 
 // setting default layout in hbs
-app.engine('hbs', hbs.engine({ extname: 'hbs', defaultLayout: 'layout', layoutsDir: __dirname + '/views/layout/', partialsDir: __dirname + '/views/layout/partials/' }))
+app.engine('hbs', hbs.engine({
+  extname: 'hbs',
+  defaultLayout: 'layout',
+  layoutsDir: __dirname + '/views/layout/',
+  partialsDir: __dirname + '/views/layout/partials/',
+  helpers: {
+    inc: function (value, options) {
+      return parseInt(value) + 1;
+    }
+  }
+}))
 
 
 app.use(logger('dev'));

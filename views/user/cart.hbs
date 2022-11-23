@@ -1,6 +1,3 @@
-
-
-
 {{#if cartProducts}}
 <div class='container mt-5 p-3 rounded cart'>
     <div class='row no-gutters'>
@@ -12,134 +9,145 @@
                         <th scope='col'>Name</th>
                         <th scope='col'>Quantity</th>
                         <th scope="col">Price</th>
+                        <th scope="col">Total</th>
                     </tr>
                 </thead>
                 <tbody>
                     {{#each cartProducts}}
-                        <tr>
-                            <td><img style='width: 70px; height:70px;' src='/images/product/{{this.product.image1}}' alt='product img'/></td>
-                            <td>{{this.product.pro_title}}</td>
-                            <td>
-                                <button class='cart-item-count mr-3 border-0' onclick="changeQuantity('{{this._id}}','{{this.product._id}}','{{../user._id}}',-1)">-</button>
-                                <span id="{{this.product._id}}">{{this.quantity}}</span>
-                                <button class='cart-item-count ml-3 border-0' onclick="changeQuantity('{{this._id}}','{{this.product._id}}','{{../user._id}}',1)">+</button>
-                            </td>
-                            <td>₹{{this.product.pro_price}}</td>
-                            <td>
-                                <button class="btn btn-danger" onclick="deleteProduct('{{this._id}}','{{this.product._id}}')" >Remove</button>
-                            </td>
-                        </tr>
-                    {{/each}}
+                    <tr>
+                        <td><img style='width: 70px; height:70px;' src='/images/product/{{this.product.image1}}'
+                                alt='product img' /></td>
+                        <td>{{this.product.pro_title}}</td>
+                        <td>
+                            <button class='cart-item-count mr-3 border-0'
+                                onclick="changeQuantity('{{this._id}}','{{this.product._id}}','{{../user._id}}',-1)">-</button>
+                            <span id="{{this.product._id}}">{{this.quantity}}</span>
+                            <button class='cart-item-count ml-3 border-0'
+                                onclick="changeQuantity('{{this._id}}','{{this.product._id}}','{{../user._id}}',1)">+</button>
+                        </td>
+                        <td>₹{{this.product.pro_price}}</td>
+
+                        <td>
+                            <button class="btn btn-danger"
+                                onclick="deleteProduct('{{this._id}}','{{this.product._id}}')">Remove</button>
+                        </td>
+                        {{/each}}
+                    </tr>
+                    {{!-- {{#each single}}
+                    <td>{{this}}</td>
+                    {{/each}} --}}
                 </tbody>
             </table>
         </div>
+
         <div class='col-md-4'>
-            <div class="card ml-5 mt-5" >
+            <div class="card ml-5 mt-5">
                 <div class="card-header py-3">
                     <h5 class="mb-0">Summary</h5>
                 </div>
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
-                    <li
-                        class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 pb-0">
-                        Products
-                        <span id="total">₹
-                            {{#if cartTotal}}
+                        <li
+                            class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 pb-0">
+                            Products
+                            <span id="total">₹
+                                {{#if cartTotal}}
                                 {{cartTotal}}
-                            {{else}}
+                                {{else}}
                                 0
-                            {{/if}}
-                        </span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                        Shipping
-                        <span>Free</span>
-                    </li>
-                    <li
-                        class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 mb-3">
-                        <strong>Total amount</strong>
-                    <span id="total"><strong>₹
-                        {{#if cartTotal}}
-                            {{cartTotal}}
-                        {{else}}
-                            0
-                        {{/if}}
-                        </strong></span>
-                    </li>
+                                {{/if}}
+                            </span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            Shipping
+                            <span>Free</span>
+                        </li>
+                        <li
+                            class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 mb-3">
+                            <strong>Total amount</strong>
+                            <span id="total"><strong>₹
+                                    {{#if cartTotal}}
+                                    {{cartTotal}}
+                                    {{else}}
+                                    0
+                                    {{/if}}
+                                </strong></span>
+                        </li>
                     </ul>
                     <a href="/place-order" class="btn btn-primary btn-lg btn-block">Go to checkout</a>
                 </div>
             </div>
-        </div>        
+        </div>
     </div>
 </div>
 {{else}}
-<div class="col-12 d-flex" >
-<img class="mx-auto my-5" src="https://mir-s3-cdn-cf.behance.net/projects/404/95974e121862329.Y3JvcCw5MjIsNzIxLDAsMTM5.png" alt="">
+<div class="col-12 d-flex">
+    <img class="mx-auto my-5"
+        src="https://mir-s3-cdn-cf.behance.net/projects/404/95974e121862329.Y3JvcCw5MjIsNzIxLDAsMTM5.png" alt="">
 
 </div>
 {{/if}}
 <script>
-    function changeQuantity(cartId, prodId,userId, count){
+    function changeQuantity(cartId, prodId, userId, count) {
         console.log(userId)
         let quantity = parseInt(document.getElementById(prodId).innerHTML)
         count = parseInt(count)
 
         $.ajax({
-            url:'/change-product-quantity',
-            data:{
-                cart:cartId,
-                product:prodId,
-                count:count,
-                quantity:quantity
+            url: '/change-product-quantity',
+            data: {
+                cart: cartId,
+                product: prodId,
+                count: count,
+                quantity: quantity
             },
-            method:'post',
-            success:(response)=>{
-                if(response.removeProduct){
+            method: 'post',
+            success: (response) => {
+                if (response.removeProduct) {
                     //alert('Product removed from cart!!')
                     //location.reload()
                     swal("Success!", "Product removed from cart", "success").then(() => {
                         location.reload();
                     })
-                }else{
-                    document.getElementById(prodId).innerHTML=quantity+count
+                } else {
+                    document.getElementById(prodId).innerHTML = quantity + count
                     location.reload();
                 }
             }
         })
     }
     function deleteProduct(cartId, proId) {
-            console.log("delete from cart");
-            swal({
-                title: "Are you sure?",
-                text: "Product will be removed from cart!",
-                icon: "warning",
-                buttons: true,
-                dangerMode: true,
-            })
-                .then((willDelete) => {
-                    if (willDelete) {
-                        $.ajax({
-                            url: "/remove-cartItem",
-                            data: {
-                                cartId: cartId,
-                                prodId: proId,
-                            },
-                            method: "post",
-                            success: (response) => {
-                                console.log(response)
-                                if (response) {
-                                    //alert("Product Removed from cart")
-                                    swal("Success!", "Product removed from cart", "success").then(() => {
-                                        location.reload();
-                                    })
+        console.log("delete from cart");
+        swal({
+            title: "Are you sure?",
+            text: "Product will be removed from cart!",
+            icon: "warning",
+            buttons: true,
+            dangerMode: true,
+        })
+            .then((willDelete) => {
+                if (willDelete) {
+                    $.ajax({
+                        url: "/remove-cartItem",
+                        data: {
+                            cartId: cartId,
+                            prodId: proId,
+                        },
+                        method: "post",
+                        success: (response) => {
+                            console.log(response)
+                            if (response) {
+                                //alert("Product Removed from cart")
+                                swal("Success!", "Product removed from cart", "success").then(() => {
+                                    location.reload();
+                                })
 
-                                }
-                            },
-                        })
-                    }
-                });
-        }
+                            }
+                        },
+                    })
+                }
+            });
+    }
     //function deleteProduct(cartId, prodId) {
     //    console.log(cartId, prodId)
     //    $.ajax({

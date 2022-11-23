@@ -1,4 +1,4 @@
-<div class="container bg-dark p-3 mt-2 " >
+<div class="container bg-dark p-3 mt-2 ">
   <h3 class="text-light mt-2 text-center font-weight-bold">Orders</h3>
 </div>
 
@@ -7,6 +7,7 @@
   <table class="table m-5 table-striped " id="userTable">
     <thead>
       <tr>
+        <th scope="col">No</th>
         <th scope="col">User Name</th>
         <th scope="col">Date</th>
         <th scope="col">Amount</th>
@@ -17,47 +18,47 @@
     </thead>
     <tbody>
       {{#each orders}}
-        <tr class="text-dark">
-          <th class="text-dark" scope="row">{{this.deliveryDetails.name}}</th>
-          <td class="text-dark" >{{this.deliveryDetails.date}}</td>
-          <td class="text-dark">{{this.totalAmount}}</td>
-          <td class="text-dark">{{this.status}}</td>
-          <td>
-            <button onclick="" class="btn btn-info">View Details</button>
-          </td>
-          <td>
-            <button onclick="cancelOrder('{{this._id}}')" class="btn btn-danger">Cancel</button>
-          </td>
-          
-        </tr>
+      <tr class="text-dark">
+        <th class="text-dark" scope="row">{{inc @index}}</th>
+        <th class="text-dark" scope="row">{{this.deliveryDetails.name}}</th>
+        <td class="text-dark">{{this.deliveryDetails.date}}</td>
+        <td class="text-dark">{{this.totalAmount}}</td>
+        <td class="text-dark">{{this.status}}</td>
+        <td>
+          <button onclick="" class="btn btn-info">View Details</button>
+        </td>
+        <td>
+          <button onclick="cancelOrder('{{this._id}}')" class="btn btn-danger">Cancel</button>
+        </td>
+
+      </tr>
       {{/each}}
     </tbody>
   </table>
 </div>
 <div class=" container mt-5 text-right">
-      <a href="/admin/admin-logout" class="btn btn-danger px- text-right text-light" >Logout</a>
+  <a href="/admin/admin-logout" class="btn btn-danger px- text-right text-light">Logout</a>
 </div>
 
 <script>
-$(document).ready( function () {
-  $('#userTable').DataTable();
-} );
+  $(document).ready(function () {
+    $('#userTable').DataTable();
+  });
 
-function cancelOrder(orderId){
-  console.log(orderId)
-  $.ajax({
-    url: '/admin/cancel-order',
-    data: {orderId:orderId},
-    method: 'post',
-    success: (response)=>{
-      console.log(response);
-      if(response.status){
-        location.reload()
+  function cancelOrder(orderId) {
+    console.log(orderId)
+    $.ajax({
+      url: '/admin/cancel-order',
+      data: { orderId: orderId },
+      method: 'post',
+      success: (response) => {
+        console.log(response);
+        if (response.status) {
+          location.reload()
+        }
       }
-    }
 
-  })
-}
+    })
+  }
 
 </script>
-

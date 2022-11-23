@@ -9,6 +9,7 @@
                 <table class="table  table" id="userTable">
                     <thead>
                         <tr>
+                            <th scope="col">No</th>
                             <th scope="col">Categories</th>
                             <th scope="col">Delete</th>
                             <th scope="col">Edit</th>
@@ -17,15 +18,18 @@
                     </thead>
                     <tbody>
                         {{#each categories}}
-                            <tr class="text-dark">
-                                <th class="text-dark" scope="row">{{this.category}}</th>
-                                <td>
-                                    <a href="/admin/delete-category/{{this._id}}" onclick="return confirm('Are you sure to delete the category {{this.category}}?')" class="btn btn-dark">Delete</a>
-                                </td>
-                                <td>
-                                    <a href="/admin/edit-category/{{this._id}}" class="btn btn-dark">Edit</a>
-                                </td>
-                            </tr>
+                        <tr class="text-dark">
+                            <td>{{inc @index}}</td>
+                            <th class="text-dark" scope="row">{{this.category}}</th>
+                            <td>
+                                <a href="/admin/delete-category/{{this._id}}"
+                                    onclick="return confirm('Are you sure to delete the category {{this.category}}?')"
+                                    class="btn btn-dark">Delete</a>
+                            </td>
+                            <td>
+                                <a href="/admin/edit-category/{{this._id}}" class="btn btn-dark">Edit</a>
+                            </td>
+                        </tr>
                         {{/each}}
                     </tbody>
                 </table>
@@ -45,5 +49,5 @@
 
 
 <script>
-    $(document).ready( function () { $('#userTable').DataTable(); } );
+    $(document).ready(function () { $('#userTable').DataTable(); });
 </script>

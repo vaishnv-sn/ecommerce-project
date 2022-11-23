@@ -1,4 +1,4 @@
-<div class="container bg-dark p-3 mt-2 " >
+<div class="container bg-dark p-3 mt-2 ">
   <h3 class="text-light mt-2 text-center font-weight-bold">Users</h3>
 </div>
 
@@ -11,6 +11,7 @@
   <table class="table m-5 table-striped " id="userTable">
     <thead>
       <tr>
+        <th scope="col">No</th>
         <th scope="col">Mobile Number</th>
         <th scope="col">First Name</th>
         <th scope="col">Last Name</th>
@@ -20,30 +21,31 @@
     </thead>
     <tbody>
       {{#each users}}
-        <tr class="text-dark">
-          <th class="text-dark" scope="row">{{this.number}}</th>
-          <td class="text-dark" >{{this.fname}}</td>
-          <td class="text-dark">{{this.lname}}</td>
-          <td class="text-dark">{{this.email}}</td>
-          <td>
-            {{#if this.blocked}}
-            <a href="/admin/unblock-user/{{this._id}}" class="btn btn-success btn-rounded">Unblock</a>
-            {{else}}
-            <a href="/admin/block-user/{{this._id}}" onclick="return confirm('Are u sure to block the user {{this.fname}}?')" class="btn btn-danger">Block</a>
-            {{/if}}
-          </td>
-        </tr>
+      <tr class="text-dark">
+        <td class="text-dark">{{inc @index}}</td>
+        <th class="text-dark" scope="row">{{this.number}}</th>
+        <td class="text-dark">{{this.fname}}</td>
+        <td class="text-dark">{{this.lname}}</td>
+        <td class="text-dark">{{this.email}}</td>
+        <td>
+          {{#if this.blocked}}
+          <a href="/admin/unblock-user/{{this._id}}" class="btn btn-success btn-rounded">Unblock</a>
+          {{else}}
+          <a href="/admin/block-user/{{this._id}}"
+            onclick="return confirm('Are u sure to block the user {{this.fname}}?')" class="btn btn-danger">Block</a>
+          {{/if}}
+        </td>
+      </tr>
       {{/each}}
     </tbody>
   </table>
 </div>
 <div class=" container mt-5 text-right">
-      <a href="/admin/admin-logout" class="btn btn-danger px- text-right text-light" >Logout</a>
+  <a href="/admin/admin-logout" class="btn btn-danger px- text-right text-light">Logout</a>
 </div>
 
 <script>
-$(document).ready( function () {
-  $('#userTable').DataTable();
-} );
+  $(document).ready(function () {
+    $('#userTable').DataTable();
+  });
 </script>
-

@@ -165,10 +165,11 @@ router.route('/cart')
   .get(verifyLogin, async function (req, res) {
     let cartProducts = await userHelper.getCartProducts(req.session.user._id);
     let cartTotal = await userHelper.getTotalCartAmount(req.session.user._id);
-    console.log(cartProducts);
-    console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
-    console.log(cartTotal);
-    res.render('user/cart', { user: req.session.user, cartProducts, cartTotal });
+    let single = cartProducts.map((item) => {
+      return item.quantity * item.product.pro_price
+    })
+    console.log(single);
+    res.render('user/cart', { user: req.session.user, cartProducts, cartTotal, single });
   })
 
 router.route('/add-to-cart/:id')
@@ -195,9 +196,30 @@ router.route('/place-order')
   .post(verifyLogin, async (req, res) => {
     let products = await userHelper.getCartProductList(req.body.userId);
     let total = await userHelper.getTotalCartAmount(req.body.userId);
-    userHelper.placeOrder(req.body, products, total).then((response) => {
-      console.log(response);
-      res.json({ status: true });
+    userHelper.placeOrder(req.body, products, total).then((orderId) => {
+      if (req.body['paymentMethod'] === 'COD') {
+        res.json({ codSuccess: true });
+      } else {
+        userHelper.generateRazorpay(orderId, total).then((response) => {
+          res.json({ response })
+        })
+      }
+    })
+  })
+
+router.route('/verify-payment')
+  .post(verifyLogin, (req, res) => {
+    console.log(req.body);
+    userHelper.verifyPayment(req.body).then(() => {
+      userHelper.changePaymentStatus(req.body['order[response][receipt]']).then(() => {
+        res.json({ status: true })
+      }).catch((err) => {
+        console.log(err);
+        res.json({ status: false })
+      })
+
+    }).catch((err) => {
+      console.log(err + 'error is here');
     })
   })
 
@@ -259,7 +281,10 @@ router.route('/remove-from-wishlist/:id')
     })
   })
 
-
+router.route('/profile')
+  .get(verifyLogin, (req, res) => {
+    res.render('user/profile', { user: req.session.user })
+  })
 
 
 

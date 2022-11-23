@@ -8,6 +8,7 @@ const e = require('express');
 // const { blockUser, unblockUser } = require('../helpers/admin-helper');
 const { adminRouteProtection, clearCache } = require('../Middlewares/routeProtection');
 const multer = require('multer');
+const { route } = require('./user');
 
 // handle storage using multer
 const storage = multer.diskStorage({
@@ -26,7 +27,7 @@ const upload = multer({ storage: storage });
 router.route('/')
   .get(function (req, res, next) {
     if (req.session.adminLoggedIn) {
-      res.redirect('/admin/all-users')
+      res.redirect('/admin/dashbord')
     } else {
       res.render('admin/adminLogin', { adminLoginErr: req.session.adminLoginErr })
       req.session.adminLoginErr = null;
@@ -39,7 +40,7 @@ router.route('/')
       if (response.adminStatus) {
         req.session.admin = response.admin
         req.session.adminLoggedIn = true
-        res.redirect('admin/all-users')
+        res.redirect('admin/dashboard')
       } else {
         req.session.adminLoginErr = "Warning: Invalid admin credentials!!!"
         res.redirect('/admin')
@@ -221,6 +222,11 @@ router.route('/add-banner')
 router.route('/list-banner')
   .get((req, res) => {
     res.render('admin/list-banner')
+  })
+
+router.route('/dashboard')
+  .get(adminRouteProtection, (req, res) => {
+    res.render('admin/dashboard', { admin: req.session.admin })
   })
 
 
