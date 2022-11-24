@@ -141,8 +141,8 @@ router.get('/delete-product/:id', clearCache, adminRouteProtection, (req, res) =
 
 // edit product
 router.route('/edit-product/:id')
-  .get(adminRouteProtection, clearCache, async (req, res) => {
-    await productHelper.getProductDetails(req.params.id).then(async (product) => {
+  .get(adminRouteProtection, clearCache, (req, res) => {
+    productHelper.getProductDetails(req.params.id).then(async (product) => {
       let categories = await categoryHelper.getAllCategory(req.params.id)
       // console.log(categories);
       res.render('admin/edit-product', { product, admin: req.session.admin, categories })

@@ -559,5 +559,77 @@ module.exports = {
         })
       reject()
     })
+  },
+  updateUser: (userId, userDetails) => {
+    return new Promise(async (resolve, reject) => {
+      await db.get().collection(USER_COLLECTION)
+        .updateOne(
+          {
+            _id: objectId(userId)
+          },
+          {
+            $set: {
+              fname: userDetails.fname,
+              lname: userDetails.lname,
+              number: userDetails.number,
+              email: userDetails.email
+            }
+          }
+        ).then((data) => {
+          console.log(data);
+          resolve()
+        })
+    })
+  },
+  getUserInfo: (userId) => {
+    return new Promise(async (resolve, reject) => {
+      await db.get().collection(USER_COLLECTION).findOne({ _id: objectId(userId) }).then((data) => {
+        console.log(data);
+        resolve(data)
+      })
+    })
+  },
+  changePassword: ({ currentPassword, newpassword }, userId) => {
+
+
+    return new Promise(async (resolve, reject) => {
+
+      let response = {}
+
+      let userfind = await db.get().collection(USER_COLLECTION).findOne({ _id: objectId(userId) })
+      console.log(userfind)
+      if (userfind) {
+
+        currentPassword = currentPassword.toString()
+        bcryptpass = await bcrypt.hash(currentPassword, 10)
+
+        bcrypt.compare(currentPassword, userfind.password).then(async (status) => {
+          console.log(status);
+
+          if (status) {
+
+            response.check = true;
+            response.successMessage = "password reseted successfully"
+
+            newpassword = newpassword.toString()
+            bcryptNewPass = await bcrypt.hash(newpassword, 10)
+
+            db.get().collection(USER_COLLECTION).updateOne({ _id: objectId(userId) }, {
+              $set: {
+                password: bcryptNewPass
+              }
+            }).then(() => {
+              console.log(response);
+              resolve(response)
+            })
+
+          } else {
+            response.check = false;
+            response.errmessage = "old password is incorrect";
+            reject(response)
+          }
+        })
+      }
+    })
   }
 }

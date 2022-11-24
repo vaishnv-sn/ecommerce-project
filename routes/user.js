@@ -282,10 +282,26 @@ router.route('/remove-from-wishlist/:id')
   })
 
 router.route('/profile')
-  .get(verifyLogin, (req, res) => {
-    res.render('user/profile', { user: req.session.user })
+  .get(verifyLogin, async (req, res) => {
+    let userData = await userHelper.getUserInfo(req.session.user._id)
+    console.log(userData);
+    res.render('user/profile', { user: req.session.user, userData })
+  })
+  .post(verifyLogin, (req, res) => {
+    userHelper.updateUser(req.session.user._id, req.body).then(() => {
+      res.redirect('/profile')
+    })
   })
 
+router.route('/change-password')
+  .post(verifyLogin, (req, res) => {
+    console.log(req.body);
+    userHelper.changePassword(req.body, req.session.user._id).then((response) => {
+      res.redirect('/profile')
+    }).catch((response) => {
+      res.redirect('/profile')
+    })
+  })
 
 
 
