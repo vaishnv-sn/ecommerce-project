@@ -1,0 +1,199 @@
+<style>
+    input[type='radio'] {
+        height: 20px;
+        width: 20px;
+        vertical-align: middle;
+    }
+</style>
+
+<div class="addresscards">
+    <div class="col">
+        <h2>Select Delivery Address</h2>
+    </div>
+
+    <div class=" m-0 row ">
+
+        <div class="container m-5">
+            <a href="/address-form" class="btn btn-primary btn-lg">Add New Address</a>
+        </div>
+        {{#each addresses}}
+        <div class="col-md-4">
+            <div class="card my-4 ml-2 shadow-3" style="border-radius:19px;">
+                <div class="form-check">
+                    <button class="btn btn-danger m-0 " title="Delete Address" onclick=" removeAddress('{{this.id}}')"
+                        type="submit" style="font-size:x-small;"><i class="fa-solid fa-trash-can"></i>
+                        x
+                    </button>
+                </div>
+                <div class="card-body  p-md-5 text-black">
+                    <h3 class="mb-4 text-uppercase">Delivery Info</h3>
+                    <p class="capitalize">Name: {{this.name}}</p>
+                    <strong>ADDRESS</strong>
+                    <p class="m-0">{{this.address}}</p>
+                    <p class="m-0">{{this.locality}}</p>
+                    <p class="m-0">ZIP CODE: {{this.pincode}}</p>
+                    <p class="m-0">Contact no: {{this.contactNumber}}</p>
+                    <form id="addressForm">
+                        <div class="m-2 rounded bg-info d-flex justify-content-center align-items-center p-2">
+                            <input type="radio" name="address" id="address1" value="{{this.id}}">
+                            <label for="address1" class="text-light mt-2 ml-1 font-weight-bold">Select this
+                                address</label>
+                        </div>
+                </div>
+            </div>
+        </div>
+        {{/each }}
+    </div>
+</div>
+
+
+
+<div class="col-md-12 mb-4">
+    <div class="card mb-4 ">
+        <div class="card-header py-3">
+            <h5 class="mb-0">Summary</h5>
+        </div>
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 pb-0">
+                    Products
+                    <span>₹{{cartTotal}}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                    Shipping
+                    <span>Free</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 mb-3">
+                    <div>
+                        <strong>Total amount</strong>
+                    </div>
+                    <span><strong>₹{{cartTotal}}</strong></span>
+                </li>
+            </ul>
+            <h4>Select Payment Method</h4>
+            <div class="m-3">
+                <input type="radio" name="paymentMethod" value="COD" id="cod">
+                <label for="cod" class="text-dark"> Cash on delivery</label>
+                <br>
+
+                <input type="radio" name="paymentMethod" value="razorpay" id="razorpay">
+                <label for="razorpay" class="text-dark">Razorpay</label>
+                <br>
+            </div>
+
+            <input type="submit" class="btn btn-primary btn-block btn-lg" value="Make purchase">
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+    function removeAddress(addressId) {
+        swal({
+            title: "Are you sure?",
+            text: "This Address will be removed!",
+            icon: "warning",
+            buttons: true,
+            dangerMode: true,
+        }).then((willDelete) => {
+            if (willDelete) {
+                $.ajax({
+                    url: '/remove-address',
+                    data: { 'addressId': addressId },
+                    method: 'post',
+                    success: (response) => {
+                        if (response.status) {
+                            location.reload()
+                        }
+                    }
+
+                })
+            }
+        })
+    }
+
+    $('#addressForm').submit((e) => {
+        e.preventDefault()
+        $.ajax({
+            url: '/place-order',
+            method: 'post',
+            data: $('#addressForm').serialize(),
+            success: (response) => {
+                if (response.codSuccess) {
+                    location.href = '/order-placed'
+                } else {
+                    console.log(response)
+                    razorpayPayment(response)
+                }
+            }
+
+        })
+    })
+
+    function razorpayPayment(order) {
+        console.log(order.response)
+        var options = {
+            "key": "rzp_test_FhG5qtJmHWybtq", // Enter the Key ID generated from the Dashboard
+            "amount": order.response.amount, // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+            "currency": "INR",
+            "name": "red gear",
+            "description": "Test Transaction",
+            "image": "https://example.com/your_logo",
+            "order_id": order.response.id, //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
+            "handler": function (response) {
+
+                verifyPayment(response, order)
+            },
+            "prefill": {
+                "name": "Gaurav Kumar",
+                "email": "gaurav.kumar@example.com",
+                "contact": "9999999999"
+            },
+            "notes": {
+                "address": "Razorpay Corporate Office"
+            },
+            "theme": {
+                "color": "#3399cc"
+            }
+        };
+        var rzp1 = new Razorpay(options);
+        rzp1.open();
+
+
+        rzp1.on('payment.failed', function (response) {
+            alert(response.error.code);
+            alert(response.error.description);
+            alert(response.error.source);
+            alert(response.error.step);
+            alert(response.error.reason);
+            alert(response.error.metadata.order_id);
+            alert(response.error.metadata.payment_id);
+        });
+    }
+
+    function verifyPayment(payment, order) {
+        console.log(payment, order + 'verifyPayment function')
+        $.ajax({
+            url: '/verify-payment',
+            data: {
+                payment: payment,
+                order: order
+            },
+            method: 'post',
+            success: (response) => {
+                if (response.status) {
+                    location.href = '/order-placed'
+                } else {
+                    aler('Payment Failed!!')
+                }
+            }
+
+        })
+    }
+
+
+</script>

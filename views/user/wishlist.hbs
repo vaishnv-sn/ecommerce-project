@@ -1,6 +1,7 @@
 <div class='container mt-5 p-3 rounded cart'>
     <div class='row no-gutters'>
         <div class='col-md-8'>
+            {{#if wishlist}}
             <table class='table mt-5'>
                 <tbody>
                     {{#each wishlist}}
@@ -24,6 +25,11 @@
                     {{/each}}
                 </tbody>
             </table>
+            {{else}}
+            <div class="m-0">
+                <img src="/images/profile/Screenshot from 2022-11-26 01-28-40.jpg" alt="" width="1000">
+            </div>
+            {{/if}}
         </div>
     </div>
 </div>

@@ -1,73 +1,5 @@
 <div class="container ">
     <div class="row m-4">
-        <div class="col-md-8 mb-4">
-            <div class="card mb-4">
-                <div class="card-header py-3">
-                    <h5 class="mb-0">Address details</h5>
-                </div>
-                <div class="card-body">
-                    <form action="/place-order" method="post" id="addressForm">
-
-                        {{!-- Name input --}}
-                        <div class="form-outline mb-4">
-                            <label class="form-label" for="form7Example1">Name</label>
-                            <input type="tel" id="form7Example1" name="name" placeholder="Enter your full name"
-                                class="form-control" required />
-                        </div>
-
-                        <!-- Number input -->
-                        <div class="form-outline mb-4">
-                            <label class="form-label" for="form7Example3">Contact Number</label>
-                            <input type="tel" id="form7Example3" name="contactNumber"
-                                placeholder="Enter your 10 digit mobile number" class="form-control" required />
-                        </div>
-
-                        <!-- Email input -->
-                        <div class="form-outline mb-4">
-                            <label class="form-label" for="form7Example5">Email</label>
-                            <input type="email" id="form7Example5" name="email" placeholder="Enter your Email Id"
-                                class="form-control" required />
-                        </div>
-
-                        {{!-- Locality input --}}
-                        <div class="form-outline mb-4">
-                            <label class="form-label" for="form7Example8">Locality</label>
-                            <input type="text" id="form7Example8" name="locality" placeholder="Enter your locality"
-                                class="form-control" required />
-                        </div>
-
-                        {{!-- Pincode input --}}
-                        <div class="form-outline mb-4">
-                            <label class="form-label" for="form7Example10">Pincode</label>
-                            <input type="text" id="form7Example9" name="pincode" placeholder="Enter your pincode"
-                                class="form-control" required />
-                        </div>
-
-                        <!-- Address input -->
-                        <div class="form-outline mb-4">
-                            <label class="form-label" for="form7Example7"> Address</label>
-                            <textarea class="form-control" name="address" placeholder="Enter your full address"
-                                id="form7Example7" rows="4" required></textarea>
-                        </div>
-
-                        <div>
-                            <p>Please select your preferred payment method</p>
-                            <input type="radio" id="COD" name="paymentMethod" value="COD" required>
-                            <label for="COD">Cash on Delivery</label><br>
-                            <input type="radio" id="online" name="paymentMethod" value="online" required>
-                            <label for="online">Pay Online</label><br>
-                        </div>
-
-                        {{!-- user Id --}}
-                        <input type="text" name="userId" value="{{user._id}}" hidden>
-
-                        {{!-- Submit input --}}
-                        <Input type="submit" class="btn btn-success mt-2" value="save address">
-                    </form>
-                </div>
-            </div>
-        </div>
-
         <div class="col-md-4 mb-4">
             <div class="card mb-4">
                 <div class="card-header py-3">
@@ -92,10 +24,19 @@
                             <span><strong>₹{{cartTotal}}</strong></span>
                         </li>
                     </ul>
+                    <form id="paymentMethod">
+                        <label for="paymentMethod1"> Cash on Delivery</label>
+                        <input type="radio" name="paymentMethod" id="paymentMethod1" value="COD">
+                        <br>
+                        <label for="paymentMethod1">Razorpay Payment</label>
+                        <input type="radio" name="paymentMethod" id="paymentMethod2" value="razorpay">
+                        <br>
+                        <input type="submit" value="Make Purchase" class="btn btn-success">
+                    </form>
 
-                    <button type="button" class="btn btn-primary btn-lg btn-block">
+                    {{!-- <button type="button" class="btn btn-primary btn-lg btn-block">
                         Make purchase
-                    </button>
+                    </button> --}}
                 </div>
             </div>
         </div>
@@ -107,12 +48,12 @@
 
 
 <script>
-    $('#addressForm').submit((e) => {
+    $('#paymentMethod').submit((e) => {
         e.preventDefault()
         $.ajax({
             url: '/place-order',
             method: 'post',
-            data: $('#addressForm').serialize(),
+            data: $('#paymentMethod').serialize(),
             success: (response) => {
                 if (response.codSuccess) {
                     location.href = '/order-placed'

@@ -22,7 +22,7 @@ router.route('/')
       wishlistCount = await userHelper.getWishlistCount(req.session.user._id)
     }
     let banners = await userHelper.getBanners()
-    console.log(banners);
+    // console.log(banners);
     productHelper.getAllProducts().then((products) => {
       res.render('user/landingPage', { user: req.session.user, products, cartCount, banners, wishlistCount });
     })
@@ -81,7 +81,7 @@ router.route('/signup')
 router.route('/view-product/:id')
   .get(clearCache, function (req, res) {
     productHelper.getProductDetails(req.params.id).then((product) => {
-      console.log(product);
+      // console.log(product);
       res.render('user/viewProduct', { user: req.session.user, product })
     })
 
@@ -109,7 +109,7 @@ router.route('/phone-page')
   })
   .post((req, res) => {
     req.session.otpNumber = req.body.phone
-    console.log(req.body);
+    // console.log(req.body);
     let signupData;
     userHelper.doOTP(req.body).then((response) => {
       if (response.status) {
@@ -135,15 +135,15 @@ router.route('/otp-page')
   .post((req, res) => {
     let number = req.session.otpNumber
     // console.log(number + 'success');
-    console.log(req.body);
+    // console.log(req.body);
     userHelper.doOTPconfirm(req.body, number).then((response) => {
       if (response.status) {
         userHelper.getUser(number).then((user) => {
-          console.log(user);
+          // console.log(user);
           if (!user.blocked) {
             req.session.user = user;
             req.session.userLoggedIn = true;
-            console.log(req.session.user);
+            // console.log(req.session.user);
             res.redirect('/')
           } else {
             req.session.blockedErr = "You can't access this site at this moment"
@@ -181,7 +181,7 @@ router.route('/add-to-cart/:id')
 
 router.route('/change-product-quantity')
   .post(verifyLogin, (req, res) => {
-    console.log(req.body);
+    // console.log(req.body);
     userHelper.changeProductQuantity(req.body).then(async (response) => {
       // response.cartTotal = await userHelper.getTotalCartAmount(req.body.user);
       res.json(response)
@@ -190,17 +190,21 @@ router.route('/change-product-quantity')
 
 router.route('/place-order')
   .get(verifyLogin, async (req, res) => {
+    console.log(req.body);
     let cartTotal = await userHelper.getTotalCartAmount(req.session.user._id);
-    res.render('user/place-order', { user: req.session.user, cartTotal })
+    let addresses = await userHelper.getUserAddresses(req.session.user._id)
+    res.render('user/selectAddress', { user: req.session.user, cartTotal, addresses })
   })
   .post(verifyLogin, async (req, res) => {
-    let products = await userHelper.getCartProductList(req.body.userId);
-    let total = await userHelper.getTotalCartAmount(req.body.userId);
-    userHelper.placeOrder(req.body, products, total).then((orderId) => {
-      if (req.body['paymentMethod'] === 'COD') {
+    console.log(req.body);
+    let products = await userHelper.getCartProductList(req.session.user._id);
+    let total = await userHelper.getTotalCartAmount(req.session.user._id);
+    userHelper.placeOrder(req.body, req.session.user._id, products, total).then((orderId) => {
+      if (req.body.paymentMethod === 'COD') {
         res.json({ codSuccess: true });
       } else {
         userHelper.generateRazorpay(orderId, total).then((response) => {
+          console.log(response);
           res.json({ response })
         })
       }
@@ -209,7 +213,6 @@ router.route('/place-order')
 
 router.route('/verify-payment')
   .post(verifyLogin, (req, res) => {
-    console.log(req.body);
     userHelper.verifyPayment(req.body).then(() => {
       userHelper.changePaymentStatus(req.body['order[response][receipt]']).then(() => {
         res.json({ status: true })
@@ -225,7 +228,6 @@ router.route('/verify-payment')
 
 router.route('/remove-cartItem')
   .post(verifyLogin, (req, res) => {
-    // console.log(req.body);
     userHelper.removeCartItem(req.body.cartId, req.body.prodId).then((response) => {
       console.log(response);
       res.json(true);
@@ -253,7 +255,6 @@ router.route('/order-placed')
 
 router.route('/cancel-order')
   .post(verifyLogin, (req, res) => {
-    // console.log(req.body);
     userHelper.cancelOrder(req.body.orderId).then(() => {
       res.json({ status: true })
     })
@@ -275,7 +276,6 @@ router.route('/add-to-wishlist/:id')
 
 router.route('/remove-from-wishlist/:id')
   .get(verifyLogin, (req, res) => {
-    console.log('hitted');
     userHelper.removeFromWishlist(req.params.id, req.session.user._id).then(() => {
       res.json({ status: true })
     })
@@ -284,7 +284,6 @@ router.route('/remove-from-wishlist/:id')
 router.route('/profile')
   .get(verifyLogin, async (req, res) => {
     let userData = await userHelper.getUserInfo(req.session.user._id)
-    console.log(userData);
     res.render('user/profile', { user: req.session.user, userData })
   })
   .post(verifyLogin, (req, res) => {
@@ -303,12 +302,46 @@ router.route('/change-password')
     })
   })
 
+router.route('/address-form')
+  .get(verifyLogin, async (req, res) => {
+    res.render('user/addNewAddress', { user: req.session.user })
+  })
+  .post(verifyLogin, (req, res) => {
+    console.log(req.body);
+    userHelper.saveAddressInUser(req.body).then((response) => {
+      res.redirect('/select-address')
+    })
+  })
 
+router.route('/remove-address')
+  .post(verifyLogin, (req, res) => {
+    console.log(req.body);
+    userHelper.removeAddress(req.session.user._id, req.body).then(() => {
+      res.json({ status: true })
+    })
+  })
+
+/* router.route('/select-address')
+  .get(verifyLogin, async (req, res) => {
+    let addresses = await userHelper.getUserAddresses(req.session.user._id)
+    res.render('user/selectAddress', { user: req.session.user, addresses })
+  })
+
+router.route('/get-deliveryAddress')
+  .post(verifyLogin, async (req, res) => {
+    let deliveryDetails = await userHelper.getDeliveryAddress(req.session.user._id, req.body)
+    userHelper.createOrderObj(deliveryDetails, products, total).then((data) => {
+      console.log(data);
+      res.json({ data })
+    })
+  })
 
 router.route('/sample')
   .get((req, res) => {
-    res.render('admin/sample')
+    res.render('user/sample')
   })
-
+  .post((req, res) => {
+    console.log(req.body);
+  }) */
 
 module.exports = router;

@@ -45,7 +45,7 @@ module.exports = {
         if (!user.blocked) {
           bcrypt.compare(userData.password, user.password).then((status) => {
             if (status) {
-              console.log(user);
+              // console.log(user);
               response.user = user
               response.status = true
               resolve(response)
@@ -83,7 +83,7 @@ module.exports = {
           .services(otp.serviceID)
           .verifications.create({ to: `+91${userData.phone}`, channel: 'sms' })
           .then((verification) => {
-            console.log(verification.status);
+            // console.log(verification.status);
           });
         // console.log(response);
         resolve(response)
@@ -143,7 +143,7 @@ module.exports = {
       let userCart = await db.get().collection(CART_COLLECTION).findOne({ user: objectId(userId) })
       if (userCart) {
         let proExist = userCart.products.findIndex(product => product.item == proId)
-        console.log(proExist);
+        // console.log(proExist);
         if (proExist != -1) {
           db.get().collection(CART_COLLECTION)
             .updateOne({ user: objectId(userId), 'products.item': objectId(proId) },
@@ -309,33 +309,47 @@ module.exports = {
         })
     })
   },
-  placeOrder: (orderDetails, products, total) => {
-    return new Promise((resolve, reject) => {
-      console.log(orderDetails);
+  placeOrder: (orderDetails, userId, products, total) => {
+    return new Promise(async (resolve, reject) => {
+
       let status = orderDetails.paymentMethod === 'COD' ? 'Placed' : 'Pending';
-      var today = new Date();
+      let deliveryAddress = await db.get().collection(USER_COLLECTION).findOne(
+        { _id: objectId(userId) },
+        {
+          projection: {
+            _id: 0,
+            address: { $elemMatch: { id: orderDetails.address } }
+          }
+        }
+      )
+      deliveryAddress = deliveryAddress.address[0]
+
+      let today = new Date();
       let dd = String(today.getDate()).padStart(2, '0');
       let yyyy = today.getFullYear();
       let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
       today = dd + '/' + mm + '/' + yyyy;
-      orderObj = {
+
+      let orderObj = {
         deliveryDetails: {
-          name: orderDetails.name,
-          mobile: orderDetails.contactNumber,
-          address: orderDetails.address,
-          locality: orderDetails.locality,
-          pincode: orderDetails.pincode,
+          name: deliveryAddress.name,
+          mobile: deliveryAddress.contactNumber,
+          address: deliveryAddress.address,
+          locality: deliveryAddress.locality,
+          pincode: deliveryAddress.pincode,
           date: today
         },
-        userId: objectId(orderDetails.userId),
-        paymentMethod: orderDetails.paymentMethod,
+        userId: objectId(userId),
         products: products,
-        status: status,
-        totalAmount: total
-      },
-        db.get().collection(ORDER_COLLECTION).insertOne(orderObj).then((response) => {
-          db.get().collection(CART_COLLECTION).deleteOne({ user: objectId(orderDetails.userId) });
-          resolve(response.insertedId);
+        totalAmount: total,
+        status: status
+      }
+
+      db.get().collection(ORDER_COLLECTION).insertOne(orderObj)
+        .then((data) => {
+          console.log(data);
+          db.get().collection(CART_COLLECTION).deleteOne({ user: objectId(userId) });
+          resolve(data.insertedId);
         })
     })
   },
@@ -386,11 +400,11 @@ module.exports = {
       ]).toArray()
       resolve(products)
     }).then((products) => {
-      console.log(products);
+      // console.log(products);
     })
   },
   cancelOrder: (orderId) => {
-    console.log(orderId);
+    // console.log(orderId);
     return new Promise((resolve, reject) => {
       db.get().collection(ORDER_COLLECTION).updateOne(
         {
@@ -404,7 +418,7 @@ module.exports = {
       )
       resolve()
     }).then((response) => {
-      console.log(response);
+      // console.log(response);
     })
   },
   getBanners: () => {
@@ -414,11 +428,11 @@ module.exports = {
     })
   },
   addToWishlist: (prodId, userId) => {
-    console.log(prodId);
-    console.log(userId);
+    // console.log(prodId);
+    // console.log(userId);
     return new Promise(async (resolve, reject) => {
       let userWishlist = await db.get().collection(WISHLIST_COLLECTION).findOne({ user: objectId(userId) })
-      console.log(userWishlist);
+      // console.log(userWishlist);
       if (userWishlist) {
         db.get().collection(WISHLIST_COLLECTION)
           .updateOne(
@@ -438,19 +452,19 @@ module.exports = {
       } else {
         let wishlistObj = {
           user: objectId(userId),
-          products: [objectId(prodId)]
+          products: [objectId(prodId)],
         }
         db.get().collection(WISHLIST_COLLECTION)
           .insertOne(wishlistObj).then((data) => {
-            console.log(data);
+            // console.log(data);
             resolve()
           })
       }
     })
   },
   removeFromWishlist: (prodId, userId) => {
-    console.log(prodId);
-    console.log(userId);
+    // console.log(prodId);
+    // console.log(userId);
     return new Promise(async (resolve, reject) => {
       await db.get().collection(WISHLIST_COLLECTION)
         .updateOne(
@@ -509,7 +523,7 @@ module.exports = {
     })
   },
   generateRazorpay: (orderId, totalPrice) => {
-    console.log('' + orderId, totalPrice);
+    // console.log('' + orderId, totalPrice);
     return new Promise((resolve, reject) => {
       instance.orders.create({
         amount: totalPrice * 100,
@@ -519,7 +533,6 @@ module.exports = {
         if (err) {
           console.log(err);
         } else {
-          console.log(order);
           resolve(order)
         }
       })
@@ -631,5 +644,151 @@ module.exports = {
         })
       }
     })
+  },
+  saveAddressInUser: (details) => {
+    return new Promise((resolve, reject) => {
+      const crypto = require('crypto')
+      let id = crypto.randomUUID()
+      details.id = id
+      db.get().collection(USER_COLLECTION).updateOne(
+        {
+          _id: objectId(details.userId)
+        },
+        {
+          $push: {
+            address: details
+          }
+        }
+      ).then((data) => {
+        resolve(data)
+      })
+    })
+  },
+  getUserAddresses: (userId) => {
+    return new Promise((resolve, reject) => {
+      db.get().collection(USER_COLLECTION).findOne({ _id: objectId(userId) }).then((data) => {
+        // console.log(data);
+        resolve(data.address)
+      })
+    })
+  },
+  removeAddress: (userId, addressId) => {
+    return new Promise((resolve, reject) => {
+      db.get().collection(USER_COLLECTION).updateOne(
+        {
+          _id: objectId(userId)
+        },
+        {
+          $pull: { address: { id: addressId.addressId } }
+        }
+      ).then(() => {
+        resolve()
+      })
+    })
+  },
+  getDeliveryAddress: (userId, addressId) => {
+    return new Promise((resolve, reject) => {
+      db.get().collection(USER_COLLECTION).findOne(
+        { _id: objectId(userId) },
+        {
+          projection: {
+            _id: 0,
+            address: { $elemMatch: { id: addressId.addressId } }
+          }
+        }
+      ).then((data) => {
+        resolve(data.address[0])
+      })
+    })
+  },
+  createOrderObj: (orderAddress, products, total) => {
+    return new Promise(async (resolve, reject) => {
+      let today = new Date();
+      let dd = String(today.getDate()).padStart(2, '0');
+      let yyyy = today.getFullYear();
+      let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+      today = dd + '/' + mm + '/' + yyyy;
+      console.log(today);
+
+      orderObj = {
+        deliveryDetails: {
+          name: orderAddress.name,
+          mobile: orderAddress.contactNumber,
+          address: orderAddress.address,
+          locality: orderAddress.locality,
+          pincode: orderAddress.pincode,
+          date: today
+        },
+        userId: objectId(orderAddress.userId),
+        products: products,
+        totalAmount: total
+      }
+      await db.get().collection(ORDER_COLLECTION).insertOne(orderObj).then((data) => {
+        resolve(data)
+      })
+    })
   }
 }
+
+/* placeOrder: (orderDetails, products, total) => {
+  return new Promise((resolve, reject) => {
+
+    let status = orderDetails.paymentMethod === 'COD' ? 'Placed' : 'Pending';
+    var today = new Date();
+    let dd = String(today.getDate()).padStart(2, '0');
+    let yyyy = today.getFullYear();
+    let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+    today = dd + '/' + mm + '/' + yyyy;
+    orderObj = {
+      deliveryDetails: {
+        name: orderDetails.name,
+        mobile: orderDetails.contactNumber,
+        address: orderDetails.address,
+        locality: orderDetails.locality,
+        pincode: orderDetails.pincode,
+        date: today
+      },
+      userId: objectId(orderDetails.userId),
+      paymentMethod: orderDetails.paymentMethod,
+      products: products,
+      status: status,
+      totalAmount: total
+    },
+      db.get().collection(ORDER_COLLECTION).insertOne(orderObj).then((response) => {
+        db.get().collection(CART_COLLECTION).deleteOne({ user: objectId(orderDetails.userId) });
+        resolve(response.insertedId);
+      })
+  })
+} */
+
+
+/* placeOrder: (orderDetails, products, total) => {
+  return new Promise((resolve, reject) => {
+
+    let status = orderDetails.paymentMethod === 'COD' ? 'Placed' : 'Pending';
+    var today = new Date();
+    let dd = String(today.getDate()).padStart(2, '0');
+    let yyyy = today.getFullYear();
+    let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+    today = dd + '/' + mm + '/' + yyyy;
+    orderObj = {
+      deliveryDetails: {
+        name: orderDetails.name,
+        mobile: orderDetails.contactNumber,
+        address: orderDetails.address,
+        locality: orderDetails.locality,
+        pincode: orderDetails.pincode,
+        date: today
+      },
+      userId: objectId(orderDetails.userId),
+      paymentMethod: orderDetails.paymentMethod,
+      products: products,
+      status: status,
+      totalAmount: total
+    },
+      db.get().collection(ORDER_COLLECTION).insertOne(orderObj).then((response) => {
+        db.get().collection(CART_COLLECTION).deleteOne({ user: objectId(orderDetails.userId) });
+        resolve(response.insertedId);
+      })
+  })
+} */
