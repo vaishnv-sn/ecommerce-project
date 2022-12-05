@@ -39,6 +39,9 @@
             <form action="/admin/categories" class="mt-5" method="post">
                 <label class="font-weight-bold" for="category">Add category</label>
                 <input type="text" name="category" class="form-control" id="category">
+                {{#if categoryErr}}
+                <p class="text-danger">{{categoryErr}}</p>
+                {{/if}}
                 <button type="submit" class="btn btn-success mt-4 ">Submit</button>
             </form>
         </div>

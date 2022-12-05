@@ -26,6 +26,7 @@
                                 onclick="changeQuantity('{{this._id}}','{{this.product._id}}','{{../user._id}}',1)">+</button>
                         </td>
                         <td>₹{{this.product.pro_price}}</td>
+                        <td>{{multiply this.product.pro_price this.quantity}}</td>
 
                         <td>
                             <button class="btn btn-danger"

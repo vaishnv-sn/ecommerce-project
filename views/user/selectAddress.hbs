@@ -35,7 +35,7 @@
                     <p class="m-0">Contact no: {{this.contactNumber}}</p>
                     <form id="addressForm">
                         <div class="m-2 rounded bg-info d-flex justify-content-center align-items-center p-2">
-                            <input type="radio" name="address" id="address1" value="{{this.id}}">
+                            <input type="radio" name="address" id="address1" value="{{this.id}}" required>
                             <label for="address1" class="text-light mt-2 ml-1 font-weight-bold">Select this
                                 address</label>
                         </div>
@@ -72,11 +72,11 @@
             </ul>
             <h4>Select Payment Method</h4>
             <div class="m-3">
-                <input type="radio" name="paymentMethod" value="COD" id="cod">
+                <input type="radio" name="paymentMethod" value="COD" id="cod" required>
                 <label for="cod" class="text-dark"> Cash on delivery</label>
                 <br>
 
-                <input type="radio" name="paymentMethod" value="razorpay" id="razorpay">
+                <input type="radio" name="paymentMethod" value="razorpay" id="razorpay" required>
                 <label for="razorpay" class="text-dark">Razorpay</label>
                 <br>
             </div>

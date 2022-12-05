@@ -113,6 +113,59 @@ module.exports = {
         resolve(data)
       })
     })
+  },
+  changeOrderStatus: (orderId, orderStatus) => {
+    return new Promise(async (resolve, reject) => {
+      await db.get().collection(ORDER_COLLECTION).updateOne(
+        { _id: objectId(orderId) },
+        {
+          $set: {
+            status: orderStatus
+          }
+        }
+      ).then((data) => {
+        console.log(data);
+        resolve()
+      })
+    }).catch((err) => {
+      console.log(err);
+      reject()
+    })
+  },
+  allUsersCount: () => {
+    return new Promise(async (resolve, reject) => {
+      let totalUsers = await db.get().collection(USER_COLLECTION).count();
+      let blockedUsers = await db.get().collection(USER_COLLECTION).count({ blocked: true });
+      let activeUsers = await db.get().collection(USER_COLLECTION).count({ blocked: false });
+
+      let userCounts = {
+        totalUsers: totalUsers,
+        blockedUsers: blockedUsers,
+        activeUsers: activeUsers
+      }
+
+      resolve(userCounts)
+
+    })
+  },
+  orderStatusCount: () => {
+    return new Promise(async (resolve, reject) => {
+      let totalPlacedOrders = await db.get().collection(ORDER_COLLECTION).count({ status: "Placed" })
+      let totalShippedOrders = await db.get().collection(ORDER_COLLECTION).count({ status: "Shipped" })
+      let totalCancelledOrders = await db.get().collection(ORDER_COLLECTION).count({ status: "Cancelled" })
+      let totalDeliveredOrders = await db.get().collection(ORDER_COLLECTION).count({ status: "Delivered" })
+      let totalOrders = totalCancelledOrders + totalPlacedOrders + totalShippedOrders + totalDeliveredOrders
+
+      let orderStatusCount = {
+        totalPlacedOrders: totalPlacedOrders,
+        totalShippedOrders: totalShippedOrders,
+        totalCancelledOrders: totalCancelledOrders,
+        totalDeliveredOrders: totalDeliveredOrders,
+        totalOrders: totalOrders
+      }
+
+      resolve(orderStatusCount)
+    })
   }
 
 }

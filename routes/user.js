@@ -241,10 +241,12 @@ router.route('/orders')
     })
   })
 
-router.route('/order-details')
-  .get(verifyLogin, async (req, res) => {
-    await userHelper.getOrderedProducts().then((products) => {
-      res.render('user/orderDetails', { user: req.session.user, products })
+router.route('/order-details/:id')
+  .get(verifyLogin, (req, res) => {
+    console.log(req.params);
+    userHelper.getOrderedProducts(req.params.id).then((orderDetails) => {
+      console.log(orderDetails);
+      res.render('user/orderDetails', { user: req.session.user, orderDetails })
     })
   })
 
@@ -309,7 +311,7 @@ router.route('/address-form')
   .post(verifyLogin, (req, res) => {
     console.log(req.body);
     userHelper.saveAddressInUser(req.body).then((response) => {
-      res.redirect('/select-address')
+      res.redirect('/place-order')
     })
   })
 
@@ -345,3 +347,8 @@ router.route('/sample')
   }) */
 
 module.exports = router;
+
+
+
+
+

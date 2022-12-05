@@ -1,6 +1,7 @@
-<div class='container mt-5 p-3 rounded cart'>
+<div class='container mt-5 p-3 rounded cart' style="height: 55vh;">
     <div class='row no-gutters'>
         <div class='col-md-8'>
+            {{#if orders}}
             <table class='table mt-5'>
                 <thead>
                     <tr>
@@ -14,34 +15,39 @@
                 </thead>
                 <tbody>
                     {{#each orders}}
-                        <tr>
-                            <td>{{this.deliveryDetails.date}}</td>
-                            <td id="status">{{this.status}}</td>
-                            <td>{{this.paymentMethod}}</td>
-                            <td>{{this.totalAmount}}</td>
-                            <td>
-                                <a class="btn btn-info" href="/order-details">View Details</a>
-                            </td>
-                            <td>
-                                <button class="btn btn-danger" onclick="cancelOrder('{{this._id}}')">Cancel</button>
-                            </td>
-                        </tr>
+                    <tr>
+                        <td>{{this.deliveryDetails.date}}</td>
+                        <td id="status">{{this.status}}</td>
+                        <td>{{this.paymentMethod}}</td>
+                        <td>{{this.totalAmount}}</td>
+                        <td>
+                            <a class="btn btn-info" href="/order-details/{{this._id}}">View Details</a>
+                        </td>
+                        <td>
+                            <button class="btn btn-danger" onclick="cancelOrder('{{this._id}}')">Cancel</button>
+                        </td>
+                    </tr>
                     {{/each}}
                 </tbody>
             </table>
-        </div>     
+            {{else}}
+            <div>
+                <img src="/images/profile/10d453a085769f32ea4f5354b2cff4eb.jpg" alt="">
+            </div>
+            {{/if}}
+        </div>
     </div>
 </div>
 
 <script>
-    function cancelOrder(orderId){
+    function cancelOrder(orderId) {
         console.log(orderId)
         $.ajax({
-            url:'/cancel-order',
-            data:{orderId:orderId},
-            method:'post',
-            success:(response)=>{
-                if(response.status){
+            url: '/cancel-order',
+            data: { orderId: orderId },
+            method: 'post',
+            success: (response) => {
+                if (response.status) {
                     location.reload()
                 }
             }

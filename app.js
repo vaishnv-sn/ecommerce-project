@@ -27,10 +27,14 @@ app.engine('hbs', hbs.engine({
   layoutsDir: __dirname + '/views/layout/',
   partialsDir: __dirname + '/views/layout/partials/',
   helpers: {
-    inc: function (value, options) {
+    inc: function (value) {
       return parseInt(value) + 1;
+    },
+    multiply: function (item1, item2) {
+      return item1 * item2
     }
   }
+
 }))
 
 

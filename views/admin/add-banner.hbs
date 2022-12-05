@@ -1,29 +1,31 @@
-<div class="my-3 bg-dark text-light">
-    <div class="p-3">
-        <h2 class="text-center">Banner Management</h2>
+<div style="height: 100vh;">
+    <div class="my-3 bg-dark text-light">
+        <div class="p-3">
+            <h2 class="text-center">Banner Management</h2>
+        </div>
     </div>
-</div>
-<div class="container">
-    <div class="row">
-        
-        <form action="/admin/add-banner" method="post" enctype="multipart/form-data">
-        <label for="banner1">Banner-1</label>
-        <br>
-        <img src="/images/product/{{banners.banner1}}"  alt="banner1" style="width: 100px; margin-bottom:10px; height:auto; border-style: dotted; border-width: 1px;">
-        <input type="file" id="banner1" name="banner1" class="form-control mb-4" required>
+    <div class="container">
+        <div class="row">
+            
+            <form action="/admin/add-banner" method="post" enctype="multipart/form-data">
+            <label for="banner1">Banner-1</label>
+            <br>
+            <img src="/images/product/{{banners.banner1}}"  alt="banner1" style="width: 100px; margin-bottom:10px; height:auto; border-style: dotted; border-width: 1px;">
+            <input type="file" id="banner1" name="banner1" class="form-control mb-4" required>
 
-        <label for="banner2">Banner-2</label>
-        <br>
-        <img src="/images/product/{{banners.banner2}}"  alt="banner2" style="width: 100px; height:auto; margin-bottom:10px; border-style: dotted; border-width: 1px;">
-        <input type="file" id="banner2" name="banner2" class="form-control mb-4" required>
+            <label for="banner2">Banner-2</label>
+            <br>
+            <img src="/images/product/{{banners.banner2}}"  alt="banner2" style="width: 100px; height:auto; margin-bottom:10px; border-style: dotted; border-width: 1px;">
+            <input type="file" id="banner2" name="banner2" class="form-control mb-4" required>
 
-        <label for="banner3">Banner-3</label>
-        <br>
-        <img src="/images/product/{{banners.banner3}}"  alt="banner3" style="width: 100px; height:auto; margin-bottom:10px; border-style: dotted; border-width: 1px;">
-        <input type="file" id="banner3" name="banner3" class="form-control mb-4" required>
+            <label for="banner3">Banner-3</label>
+            <br>
+            <img src="/images/product/{{banners.banner3}}"  alt="banner3" style="width: 100px; height:auto; margin-bottom:10px; border-style: dotted; border-width: 1px;">
+            <input type="file" id="banner3" name="banner3" class="form-control mb-4" required>
+            
+            <button type="submit" class="btn btn-success">Submit</button>
+        </form>
+        </div>
         
-        <button type="submit" class="btn btn-success">Submit</button>
-    </form>
     </div>
-    
 </div>

@@ -1,11 +1,11 @@
 var express = require('express');
 var router = express.Router();
-var userHelper = require('../helpers/user-helper')
-var adminHelper = require('../helpers/admin-helper')
+var userHelper = require('../helpers/user-helper');
+var adminHelper = require('../helpers/admin-helper');
 var productHelper = require('../helpers/product-helper');
-var categoryHelper = require('../helpers/category-helper')
+var categoryHelper = require('../helpers/category-helper');
+const chartHelper = require('../helpers/chart-helper');
 const e = require('express');
-// const { blockUser, unblockUser } = require('../helpers/admin-helper');
 const { adminRouteProtection, clearCache } = require('../Middlewares/routeProtection');
 const multer = require('multer');
 const { route } = require('./user');
@@ -27,7 +27,7 @@ const upload = multer({ storage: storage });
 router.route('/')
   .get(function (req, res, next) {
     if (req.session.adminLoggedIn) {
-      res.redirect('/admin/dashbord')
+      res.redirect('/admin/dashboard')
     } else {
       res.render('admin/adminLogin', { adminLoginErr: req.session.adminLoginErr })
       req.session.adminLoginErr = null;
@@ -40,7 +40,7 @@ router.route('/')
       if (response.adminStatus) {
         req.session.admin = response.admin
         req.session.adminLoggedIn = true
-        res.redirect('admin/dashboard')
+        res.redirect('/admin/dashboard')
       } else {
         req.session.adminLoginErr = "Warning: Invalid admin credentials!!!"
         res.redirect('/admin')
@@ -53,14 +53,14 @@ router.route('/all-users')
   .get(adminRouteProtection, clearCache, function (req, res) {
     adminHelper.getAllUsers().then((users) => {
       // console.log(users);
-      res.render('admin/list-users', { users, admin: true })
+      res.render('admin/list-users', { users, admin: req.session.admin })
     })
   });
 
 // add user
 router.route('/add-user')
   .get(adminRouteProtection, clearCache, function (req, res) {
-    res.render('admin/add-user', { admin: true })
+    res.render('admin/add-user', { admin: req.session.admin })
   })
   .post(function (req, res) {
     userHelper.doSignup(req.body).then(
@@ -73,7 +73,7 @@ router.route('/all-products')
   .get(adminRouteProtection, clearCache, function (req, res) {
     productHelper.getAllProducts().then((products) => {
       // console.log(products);
-      res.render('admin/list-products', { admin: true, products })
+      res.render('admin/list-products', { admin: req.session.admin, products })
     })
   });
 
@@ -81,11 +81,16 @@ router.route('/all-products')
 router.route('/categories')
   .get(adminRouteProtection, clearCache, function (req, res) {
     categoryHelper.getAllCategory().then((categories) => {
-      res.render('admin/categories', { categories, admin: true })
+      let categoryErr = req.session.categoryErr
+      res.render('admin/categories', { categories, admin: req.session.admin, categoryErr })
+      req.session.categoryErr = null
     })
   })
   .post((req, res) => {
     categoryHelper.addCategory(req.body).then(() => {
+      res.redirect('/admin/categories')
+    }).catch((err) => {
+      req.session.categoryErr = err.status
       res.redirect('/admin/categories')
     })
   });
@@ -103,7 +108,7 @@ router.route('/delete-category/:id')
 router.route("/add-product")
   .get(adminRouteProtection, clearCache, function (req, res) {
     categoryHelper.getAllCategory().then((categories) => {
-      res.render('admin/add-products', { categories, admin: true })
+      res.render('admin/add-products', { categories, admin: req.session.admin })
     })
   })
   .post(upload.fields([{ name: 'image1', maxCount: 1 }, { name: 'image2', maxCount: 1 },]), function (req, res) {
@@ -196,10 +201,10 @@ router.route('/cancel-order')
   })
 
 router.route('/add-banner')
-  .get(async (req, res) => {
+  .get(adminRouteProtection, async (req, res) => {
     await adminHelper.getBanners().then((banners) => {
       // console.log(banners);
-      res.render('admin/add-banner', { banners })
+      res.render('admin/add-banner', { admin: req.session.admin, banners })
 
     })
   })
@@ -225,10 +230,23 @@ router.route('/list-banner')
   })
 
 router.route('/dashboard')
-  .get(adminRouteProtection, (req, res) => {
-    res.render('admin/dashboard', { admin: req.session.admin })
+  .get(adminRouteProtection, async (req, res) => {
+
+    let userCount = await adminHelper.allUsersCount()
+    let orderStatusCount = await adminHelper.orderStatusCount()
+    console.log(orderStatusCount);
+
+    res.render('admin/dashboard', { admin: req.session.admin, userCount, orderStatusCount })
   })
 
+router.route('/edit-order-status/:id')
+  .post(adminRouteProtection, (req, res) => {
+    console.log(req.params.id);
+    console.log(req.body.deliveryStatus);
+    adminHelper.changeOrderStatus(req.params.id, req.body.deliveryStatus).then(() => {
+      res.redirect('/admin/all-orders')
+    })
+  })
 
 
 

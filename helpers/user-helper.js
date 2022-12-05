@@ -24,7 +24,6 @@ module.exports = {
       let user = await db.get().collection(USER_COLLECTION).findOne({ number: userData.number })
       if (user) {
         reject({ status: "User already exists" })
-        // console.log("User exists!");
       } else {
         userData.password = await bcrypt.hash(userData.password, 10)
         db.get().collection(USER_COLLECTION).insertOne(userData)
@@ -342,6 +341,7 @@ module.exports = {
         userId: objectId(userId),
         products: products,
         totalAmount: total,
+        paymentMethod: orderDetails.paymentMethod,
         status: status
       }
 
@@ -367,7 +367,7 @@ module.exports = {
   },
   getOrderedProducts: (orderId) => {
     return new Promise(async (resolve, reject) => {
-      let products = db.get().collection(ORDER_COLLECTION).aggregate([
+      let products = await db.get().collection(ORDER_COLLECTION).aggregate([
         {
           $match: { _id: objectId(orderId) }
         },
@@ -378,7 +378,9 @@ module.exports = {
 
           $project: {
             item: '$products.item',
-            quantity: '$products.quantity'
+            quantity: '$products.quantity',
+            totalAmount: '$totalAmount'
+
           }
         },
         {
@@ -391,16 +393,17 @@ module.exports = {
         },
         {
           $project: {
-            item: 1,
+            totalAmount: 1,
+            paymentMethod: 1,
+            status: 1,
             quantity: 1,
+            deliveryDetails: 1,
             product: { $arrayElemAt: ['$product', 0] }
           }
         }
 
       ]).toArray()
       resolve(products)
-    }).then((products) => {
-      // console.log(products);
     })
   },
   cancelOrder: (orderId) => {
