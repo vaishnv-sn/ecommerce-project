@@ -20,14 +20,81 @@ module.exports = {
   /* -------------------------------------------------------------------------- */
 
   doSignup: (userData) => {
+    console.log(userData.referral);
     return new Promise(async (resolve, reject) => {
       let user = await db.get().collection(USER_COLLECTION).findOne({ number: userData.number })
+
       if (user) {
-        reject({ status: "User already exists" })
+
+        reject({ status: "User with same phone number already exists" })
+
       } else {
-        userData.password = await bcrypt.hash(userData.password, 10)
-        db.get().collection(USER_COLLECTION).insertOne(userData)
-        resolve()
+
+        if (userData.referral === "") {
+          userData.wallet = 0;
+          userData.blocked = false;
+          userData.password = await bcrypt.hash(userData.password, 10)
+          userData.walletHistory = []
+          userData.referral = Math.floor((Math.random() * 100000000) + 12345)
+          console.log(userData);
+          db.get().collection(USER_COLLECTION).insertOne(userData).then(() => {
+            resolve({ status: "User Created Successfully!!" })
+          })
+
+        } else {
+
+          let referralCheck = await db.get().collection(USER_COLLECTION).findOne({ referral: parseInt(userData.referral) })
+          if (referralCheck) {
+
+            let today = new Date();
+            let dd = String(today.getDate()).padStart(2, '0');
+            let yyyy = today.getFullYear();
+            let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+            today = dd + '/' + mm + '/' + yyyy;
+
+            await db.get().collection(USER_COLLECTION).updateOne({ referral: parseInt(userData.referral) },
+              {
+                $set: {
+                  wallet: referralCheck.wallet + 100
+                },
+                $push: {
+                  walletHistory: {
+                    date: today,
+                    message: userData.fname + " joined with your referral code.",
+                    amount: 100
+                  }
+                }
+              }
+            )
+            userData.wallet = 100;
+            userData.blocked = false;
+            userData.password = await bcrypt.hash(userData.password, 10);
+            userData.walletHistory = [
+              {
+                date: today,
+                message: "Reward for joining with the referral code of " + referralCheck.fname,
+                amount: 100
+              }
+            ];
+            userData.referral = Math.floor((Math.random() * 100000000) + 12345);
+            db.get().collection(USER_COLLECTION).insertOne(userData).then(() => {
+              resolve({ status: "User Created Successfully!!" })
+            })
+
+          } else {
+
+            userData.wallet = 0;
+            userData.blocked = false;
+            userData.password = await bcrypt.hash(userData.password, 10)
+            userData.walletHistory = []
+            userData.referral = Math.floor((Math.random() * 100000000) + 12345)
+            console.log(userData);
+            db.get().collection(USER_COLLECTION).insertOne(userData).then(() => {
+              resolve({ status: "User Created Successfully!!" })
+            })
+
+          }
+        }
       }
     })
   },
@@ -728,6 +795,14 @@ module.exports = {
       }
       await db.get().collection(ORDER_COLLECTION).insertOne(orderObj).then((data) => {
         resolve(data)
+      })
+    })
+  },
+  getWalletHistory: (userId) => {
+    return new Promise((resolve, reject) => {
+      db.get().collection(USER_COLLECTION).findOne({ _id: objectId(userId) }).then((data) => {
+        console.log(data);
+        resolve(data.walletHistory)
       })
     })
   }

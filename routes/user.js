@@ -38,9 +38,10 @@ router.route('/login')
     if (req.session.userLoggedIn) {
       res.redirect('/');
     } else
-      res.render('user/login', { loginErr: req.session.loginErr, blockErr: req.session.blockedErr });
+      res.render('user/login', { loginErr: req.session.loginErr, blockErr: req.session.blockedErr, signupMsg: req.session.signupSuccess });
     req.session.loginErr = null;
     req.session.blockedErr = null;
+    req.session.signupSuccess = null;
   })
   .post(function (req, res) {
     // console.log(req.body);
@@ -66,7 +67,9 @@ router.route('/signup')
     req.session.emailErr = null;
   })
   .post(function (req, res) {
-    doSignup(req.body).then(() => {
+    console.log(req.body);
+    doSignup(req.body).then((status) => {
+      req.session.signupSuccess = status.status
       res.redirect('/login');
     }).catch((err) => {
       req.session.emailErr = err.status
@@ -320,6 +323,13 @@ router.route('/remove-address')
     console.log(req.body);
     userHelper.removeAddress(req.session.user._id, req.body).then(() => {
       res.json({ status: true })
+    })
+  })
+
+router.route('/wallet-history')
+  .get(verifyLogin, (req, res) => {
+    userHelper.getWalletHistory(req.session.user._id).then((walletHistory) => {
+      res.render('user/walletHistory', { user: req.session.user, walletHistory })
     })
   })
 

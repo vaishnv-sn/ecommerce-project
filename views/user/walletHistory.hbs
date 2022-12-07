@@ -1,0 +1,38 @@
+<div style="height: 100vh;">
+    <div class="container bg-dark p-3 mt-2 ">
+        <h3 class="text-light mt-2 text-center font-weight-bold">Wallet History</h3>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8">
+                {{#if walletHistory}}
+                <table class='table mt-5'>
+                    <tbody>
+                        {{#each walletHistory}}
+                        <tr>
+                            <td>
+                                <p class="mt-3">{{inc @index}}.</p>
+                            </td>
+                            <td>
+                                <p class="mt-3">{{this.date}}</p>
+                            </td>
+                            <td>
+                                <p class="m-0 text-dark">{{this.message}}</p>
+                                <p class=""> Amount: <strong class="text-success">{{this.amount}}</strong></p>
+                            </td>
+                            <td>
+                            </td>
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+                {{else}}
+                <div class="m-3">
+                    <img src="/images/profile/40144693214_8cd3004bca_b.jpg" alt="" width="700">
+                </div>
+                {{/if}}
+            </div>
+        </div>
+    </div>
+    
+</div>
