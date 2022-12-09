@@ -11,6 +11,14 @@
         <h2>Select Delivery Address</h2>
     </div>
 
+    {{#if walletErr}}
+    <div class="mt-3">
+        <div class="alert alert-danger " role="alert">
+            {{walletErr}}
+        </div>
+    </div>
+    {{/if}}
+
     <div class=" m-0 row ">
 
         <div class="container m-5">
@@ -79,6 +87,10 @@
                 <input type="radio" name="paymentMethod" value="razorpay" id="razorpay" required>
                 <label for="razorpay" class="text-dark">Razorpay</label>
                 <br>
+
+                <input type="radio" name="paymentMethod" value="wallet" id="wallet" required>
+                <label for="wallet" class="text-dark">Wallet</label>
+                <br>
             </div>
 
             <input type="submit" class="btn btn-primary btn-block btn-lg" value="Make purchase">
@@ -125,8 +137,11 @@
             success: (response) => {
                 if (response.codSuccess) {
                     location.href = '/order-placed'
+                }else if(response.walletErr){
+                    location.href = '/place-order'
+                }else if(response.walletSuccess){
+                    location.href = '/order-placed'
                 } else {
-                    console.log(response)
                     razorpayPayment(response)
                 }
             }

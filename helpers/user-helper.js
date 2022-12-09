@@ -1,11 +1,12 @@
 var db = require('../config/connection')
-const { USER_COLLECTION, CART_COLLECTION, PRODUCT_COLLECTION, ORDER_COLLECTION, BANNER_COLLECTION, WISHLIST_COLLECTION } = require('../config/collections');
+const { USER_COLLECTION, CART_COLLECTION, PRODUCT_COLLECTION, ORDER_COLLECTION, BANNER_COLLECTION, WISHLIST_COLLECTION, CATEGORY_COLLECTION } = require('../config/collections');
 const bcrypt = require('bcrypt');
 var objectId = require('mongodb').ObjectId
 const otp = require('../config/otp');
 const { response } = require('express');
 const client = require('twilio')(otp.accountSID, otp.authToken)
 const razorpay = require('razorpay');
+const { resolve } = require('path');
 
 var instance = new razorpay({
   key_id: 'rzp_test_FhG5qtJmHWybtq',
@@ -176,7 +177,6 @@ module.exports = {
         .services(otp.serviceID)
         .verificationChecks.create({ to: `+91${number}`, code: OTP.otp })
         .then((data) => {
-          // console.log(data);
           if (data.status == 'approved') {
             // response.user = user;
             // response.user.status = true
@@ -272,6 +272,7 @@ module.exports = {
       resolve(cartItems)
     })
   },
+
   getCartCount: (userId) => {
     return new Promise(async (resolve, reject) => {
       let count = 0;
@@ -283,6 +284,7 @@ module.exports = {
       resolve(count)
     })
   },
+
   changeProductQuantity: (details) => {
     let quantity = parseInt(details.quantity)
     let count = parseInt(details.count)
@@ -375,10 +377,12 @@ module.exports = {
         })
     })
   },
+
   placeOrder: (orderDetails, userId, products, total) => {
     return new Promise(async (resolve, reject) => {
 
       let status = orderDetails.paymentMethod === 'COD' ? 'Placed' : 'Pending';
+
       let deliveryAddress = await db.get().collection(USER_COLLECTION).findOne(
         { _id: objectId(userId) },
         {
@@ -420,18 +424,21 @@ module.exports = {
         })
     })
   },
+
   getCartProductList: (userId) => {
     return new Promise(async (resolve, reject) => {
       let cart = await db.get().collection(CART_COLLECTION).findOne({ user: objectId(userId) })
       resolve(cart.products);
     })
   },
+
   getUserOrders: (userId) => {
     return new Promise(async (resolve, reject) => {
       let orders = await db.get().collection(ORDER_COLLECTION).find({ userId: objectId(userId) }).toArray()
       resolve(orders)
     })
   },
+
   getOrderedProducts: (orderId) => {
     return new Promise(async (resolve, reject) => {
       let products = await db.get().collection(ORDER_COLLECTION).aggregate([
@@ -473,10 +480,11 @@ module.exports = {
       resolve(products)
     })
   },
+
   cancelOrder: (orderId) => {
     // console.log(orderId);
-    return new Promise((resolve, reject) => {
-      db.get().collection(ORDER_COLLECTION).updateOne(
+    return new Promise(async (resolve, reject) => {
+      await db.get().collection(ORDER_COLLECTION).updateOne(
         {
           _id: objectId(orderId)
         },
@@ -486,23 +494,21 @@ module.exports = {
           }
         }
       )
+    }).then(() => {
       resolve()
-    }).then((response) => {
-      // console.log(response);
     })
   },
+
   getBanners: () => {
     return new Promise(async (resolve, reject) => {
       let banners = await db.get().collection(BANNER_COLLECTION).findOne({})
       resolve(banners)
     })
   },
+
   addToWishlist: (prodId, userId) => {
-    // console.log(prodId);
-    // console.log(userId);
     return new Promise(async (resolve, reject) => {
       let userWishlist = await db.get().collection(WISHLIST_COLLECTION).findOne({ user: objectId(userId) })
-      // console.log(userWishlist);
       if (userWishlist) {
         db.get().collection(WISHLIST_COLLECTION)
           .updateOne(
@@ -532,6 +538,7 @@ module.exports = {
       }
     })
   },
+
   removeFromWishlist: (prodId, userId) => {
     // console.log(prodId);
     // console.log(userId);
@@ -553,6 +560,7 @@ module.exports = {
         })
     })
   },
+
   getWishlistCount: (userId) => {
     return new Promise(async (resolve, reject) => {
       let count = 0;
@@ -564,6 +572,7 @@ module.exports = {
       resolve(count)
     })
   },
+
   getWishlistProducts: (userId) => {
     return new Promise(async (resolve, reject) => {
       let wishlistProducts = await db.get().collection(WISHLIST_COLLECTION).aggregate([
@@ -592,6 +601,7 @@ module.exports = {
       resolve(wishlistProducts)
     })
   },
+
   generateRazorpay: (orderId, totalPrice) => {
     // console.log('' + orderId, totalPrice);
     return new Promise((resolve, reject) => {
@@ -608,6 +618,7 @@ module.exports = {
       })
     })
   },
+
   verifyPayment: (details) => {
     return new Promise((resolve, reject) => {
       const crypto = require('crypto');
@@ -623,6 +634,7 @@ module.exports = {
       }
     })
   },
+
   changePaymentStatus: (orderId) => {
     console.log(orderId + 'orderId');
     return new Promise(async (resolve, reject) => {
@@ -643,6 +655,7 @@ module.exports = {
       reject()
     })
   },
+
   updateUser: (userId, userDetails) => {
     return new Promise(async (resolve, reject) => {
       await db.get().collection(USER_COLLECTION)
@@ -664,6 +677,7 @@ module.exports = {
         })
     })
   },
+
   getUserInfo: (userId) => {
     return new Promise(async (resolve, reject) => {
       await db.get().collection(USER_COLLECTION).findOne({ _id: objectId(userId) }).then((data) => {
@@ -672,9 +686,8 @@ module.exports = {
       })
     })
   },
+
   changePassword: ({ currentPassword, newpassword }, userId) => {
-
-
     return new Promise(async (resolve, reject) => {
 
       let response = {}
@@ -715,6 +728,7 @@ module.exports = {
       }
     })
   },
+
   saveAddressInUser: (details) => {
     return new Promise((resolve, reject) => {
       const crypto = require('crypto')
@@ -734,6 +748,7 @@ module.exports = {
       })
     })
   },
+
   getUserAddresses: (userId) => {
     return new Promise((resolve, reject) => {
       db.get().collection(USER_COLLECTION).findOne({ _id: objectId(userId) }).then((data) => {
@@ -742,6 +757,7 @@ module.exports = {
       })
     })
   },
+
   removeAddress: (userId, addressId) => {
     return new Promise((resolve, reject) => {
       db.get().collection(USER_COLLECTION).updateOne(
@@ -756,6 +772,7 @@ module.exports = {
       })
     })
   },
+
   getDeliveryAddress: (userId, addressId) => {
     return new Promise((resolve, reject) => {
       db.get().collection(USER_COLLECTION).findOne(
@@ -771,6 +788,7 @@ module.exports = {
       })
     })
   },
+
   createOrderObj: (orderAddress, products, total) => {
     return new Promise(async (resolve, reject) => {
       let today = new Date();
@@ -798,6 +816,7 @@ module.exports = {
       })
     })
   },
+
   getWalletHistory: (userId) => {
     return new Promise((resolve, reject) => {
       db.get().collection(USER_COLLECTION).findOne({ _id: objectId(userId) }).then((data) => {
@@ -805,68 +824,133 @@ module.exports = {
         resolve(data.walletHistory)
       })
     })
+  },
+
+  getCategories: () => {
+    return new Promise(async (resolve, reject) => {
+      let categories = await db.get().collection(CATEGORY_COLLECTION).find().toArray()
+      resolve(categories)
+    })
+  },
+
+  getCategoryProducts: (categoryName) => {
+    return new Promise(async (resolve, reject) => {
+      let categoryProducts = await db.get().collection(PRODUCT_COLLECTION).find({ pro_category: categoryName }).toArray()
+      resolve(categoryProducts)
+    })
+  },
+  getWalletAmount: (userId) => {
+    return new Promise(async (resolve, reject) => {
+      let user = await db.get().collection(USER_COLLECTION).findOne({ _id: objectId(userId) });
+      resolve(user.wallet)
+    })
+  },
+
+  placeWalletOrder: (orderDetails, userId, products, total, walletAmt) => {
+    return new Promise(async (resolve, reject) => {
+      let status = orderDetails.paymentMethod = "Placed"
+      let deliveryAddress = await db.get().collection(USER_COLLECTION).findOne(
+        { _id: objectId(userId) },
+        {
+          projection: {
+            _id: 0,
+            address: { $elemMatch: { id: orderDetails.address } }
+          }
+        }
+      )
+      deliveryAddress = deliveryAddress.address[0]
+      console.log(deliveryAddress);
+
+      let today = new Date();
+      let dd = String(today.getDate()).padStart(2, '0');
+      let yyyy = today.getFullYear();
+      let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+      today = dd + '/' + mm + '/' + yyyy;
+
+      let orderObj = {
+        deliveryDetails: {
+          name: deliveryAddress.name,
+          mobile: deliveryAddress.contactNumber,
+          address: deliveryAddress.address,
+          locality: deliveryAddress.locality,
+          pincode: deliveryAddress.pincode,
+          date: today
+        },
+        userId: objectId(userId),
+        products: products,
+        totalAmount: total,
+        paymentMethod: orderDetails.paymentMethod,
+        status: status
+      }
+
+      db.get().collection(ORDER_COLLECTION).insertOne(orderObj)
+        .then(async (data) => {
+          await db.get().collection(CART_COLLECTION).deleteOne({ user: objectId(userId) });
+          await db.get().collection(USER_COLLECTION).updateOne(
+            {
+              _id: objectId(userId)
+            },
+            {
+              $inc: {
+                wallet: parseInt(-total)
+              },
+              $push: {
+                walletHistory: {
+                  date: today,
+                  message: "Created an order with your wallet amount.",
+                  amount: total,
+                  orderId: data.insertedId
+                }
+              }
+
+            }
+
+          )
+          resolve();
+        })
+    })
   }
 }
 
-/* placeOrder: (orderDetails, products, total) => {
-  return new Promise((resolve, reject) => {
+/* let status = orderDetails.paymentMethod === 'COD' ? 'Placed' : 'Pending';
 
-    let status = orderDetails.paymentMethod === 'COD' ? 'Placed' : 'Pending';
-    var today = new Date();
-    let dd = String(today.getDate()).padStart(2, '0');
-    let yyyy = today.getFullYear();
-    let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
-    today = dd + '/' + mm + '/' + yyyy;
-    orderObj = {
-      deliveryDetails: {
-        name: orderDetails.name,
-        mobile: orderDetails.contactNumber,
-        address: orderDetails.address,
-        locality: orderDetails.locality,
-        pincode: orderDetails.pincode,
-        date: today
-      },
-      userId: objectId(orderDetails.userId),
-      paymentMethod: orderDetails.paymentMethod,
-      products: products,
-      status: status,
-      totalAmount: total
-    },
-      db.get().collection(ORDER_COLLECTION).insertOne(orderObj).then((response) => {
-        db.get().collection(CART_COLLECTION).deleteOne({ user: objectId(orderDetails.userId) });
-        resolve(response.insertedId);
-      })
+let deliveryAddress = await db.get().collection(USER_COLLECTION).findOne(
+  { _id: objectId(userId) },
+  {
+    projection: {
+      _id: 0,
+      address: { $elemMatch: { id: orderDetails.address } }
+    }
+  }
+)
+deliveryAddress = deliveryAddress.address[0]
+
+let today = new Date();
+let dd = String(today.getDate()).padStart(2, '0');
+let yyyy = today.getFullYear();
+let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+today = dd + '/' + mm + '/' + yyyy;
+
+let orderObj = {
+  deliveryDetails: {
+    name: deliveryAddress.name,
+    mobile: deliveryAddress.contactNumber,
+    address: deliveryAddress.address,
+    locality: deliveryAddress.locality,
+    pincode: deliveryAddress.pincode,
+    date: today
+  },
+  userId: objectId(userId),
+  products: products,
+  totalAmount: total,
+  paymentMethod: orderDetails.paymentMethod,
+  status: status
+}
+
+  db.get().collection(ORDER_COLLECTION).insertOne(orderObj)
+  .then((data) => {
+    console.log(data);
+    db.get().collection(CART_COLLECTION).deleteOne({ user: objectId(userId) });
+    resolve(data.insertedId);
   })
-} */
-
-
-/* placeOrder: (orderDetails, products, total) => {
-  return new Promise((resolve, reject) => {
-
-    let status = orderDetails.paymentMethod === 'COD' ? 'Placed' : 'Pending';
-    var today = new Date();
-    let dd = String(today.getDate()).padStart(2, '0');
-    let yyyy = today.getFullYear();
-    let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
-    today = dd + '/' + mm + '/' + yyyy;
-    orderObj = {
-      deliveryDetails: {
-        name: orderDetails.name,
-        mobile: orderDetails.contactNumber,
-        address: orderDetails.address,
-        locality: orderDetails.locality,
-        pincode: orderDetails.pincode,
-        date: today
-      },
-      userId: objectId(orderDetails.userId),
-      paymentMethod: orderDetails.paymentMethod,
-      products: products,
-      status: status,
-      totalAmount: total
-    },
-      db.get().collection(ORDER_COLLECTION).insertOne(orderObj).then((response) => {
-        db.get().collection(CART_COLLECTION).deleteOne({ user: objectId(orderDetails.userId) });
-        resolve(response.insertedId);
-      })
-  })
-} */
+    }) */

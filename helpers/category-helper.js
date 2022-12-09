@@ -13,13 +13,13 @@ module.exports = {
     },
     addCategory: (category) => {
         return new Promise(async (resolve, reject) => {
-            console.log(category);
-            let categoryExist = db.get().collection(CATEGORY_COLLECTION).findOne({ category: category.category })
+            let categoryExist = await db.get().collection(CATEGORY_COLLECTION).findOne({ category: category.category })
+            console.log(categoryExist);
             if (categoryExist) {
                 reject({ status: 'Category already Exist!!' })
             } else {
                 db.get().collection(CATEGORY_COLLECTION).insertOne(category).then(() => {
-                    resolve()
+                    resolve({ status: 'Category created successfully' })
                 })
             }
         })

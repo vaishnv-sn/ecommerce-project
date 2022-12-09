@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+        <meta name="description" content="" />
+        <meta name="author" content="Mannat Themes" />
+        <meta name="keyword" content="" />
+
+        <title>LAPTOP WORLD</title>
+
+        <!-- Theme icon -->
+        <link rel="shortcut icon" href="/Admin/images/favicon.ico" />
+
+        <!-- Theme Css -->
+        <link type="text/css" href="@@path/vendor/sweetalert2/dist/sweetalert2.min.css" rel="stylesheet" />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css"
+            integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+            crossorigin="anonymous"
+        />
+        <link href="//netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css" />
+        <link href="/Admin/css/bootstrap.min.css" rel="stylesheet" />
+        <link href="/Admin/css/slidebars.min.css" rel="stylesheet" />
+        <link href="/Admin/css/icons.css" rel="stylesheet" />
+        <link href="/Admin/css/menu.css" rel="stylesheet" type="text/css" />
+        <link href="/Admin/css/style.css" rel="stylesheet" />
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.css" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.js"></script>
+    </head>
+
+    <body class="sticky-header">
+        <div class="container-fluid">
+            <div class="page-head">
+                <br />
+                <h4 class="my-2 font-weight-bold" style="text-align: center" ;><u>ADD A PRODUCT</u></h4>
+                <br />
+                <form class="form-horizontal" method="post" action="/admin-addproducts" enctype="multipart/form-data">
+                    <fieldset>
+                        <div class="col-5 mb-4" style="margin: auto">
+                            <div class="form-group">
+                                <label class="col-md-4 control-label" for="product_categorie">PRODUCT CATEGORY</label>
+                                <div class="col-md-6">
+                                    <select id="product_categorie" name="category" class="form-control">
+                                        {{#each category}}
+                                        <option name="category" value="{{ this._id }}">{{ this.category }}</option>
+
+                                        {{/each}}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-5 mb-4" style="margin: auto">
+                            <div class="form-group">
+                                <label class="col-md-4 control-label" for="product_name">PRODUCT NAME</label>
+                                <div class="col-md-6">
+                                    <input
+                                        id="product_name"
+                                        name="name"
+                                        placeholder="Product Name"
+                                        class="form-control input-md"
+                                        required=""
+                                        type="text"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-5 mb-4" style="margin: auto">
+                            <div class="form-group">
+                                <label class="col-md-4 control-label" for="percentage_discount">PRICE</label>
+                                <div class="col-md-6">
+                                    <input
+                                        id="percentage_discount"
+                                        name="price"
+                                        placeholder="Price of Product"
+                                        class="form-control input-md"
+                                        required=""
+                                        type="number"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-5 mb-4" style="margin: auto">
+                            <div class="form-group">
+                                <label class="col-md-4 control-label" for="available_quantity">OFFER PERCENTAGE </label>
+                                <div class="col-md-6">
+                                    <input
+                                        id="available_quantity"
+                                        name="offerPercentage"
+                                        placeholder="Add offer Percentage"
+                                        class="form-control input-md"
+                                        type="number"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-5 mb-4" style="margin: auto">
+                            <div class="form-group">
+                                <label class="col-md-4 control-label" for="product_description">PRODUCT DESCRIPTION</label>
+                                <div class="col-md-6">
+                                    <textarea
+                                        class="form-control"
+                                        id="description"
+                                        name="description"
+                                        placeholder="Add a Description"
+                                        required=""
+                                    ></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-5 mb-4" style="margin: auto">
+                            <div class="form-group">
+                                <label class="col-md-4 control-label" for="stock">STOCK</label>
+                                <div class="col-md-6">
+                                    <input
+                                        id="stock"
+                                        name="stock"
+                                        placeholder="Stock of Product"
+                                        class="form-control input-md"
+                                        required=""
+                                        type="number"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-5 mb-4" style="margin: auto">
+                            {{!-- file 1--}}
+                            <div class="form-group">
+                                <label for="imgFile1">IMAGE1</label>
+                                <input
+                                    type="file"
+                                    class="form-control image"
+                                    id="imgFile1"
+                                    accept="image/*"
+                                    name="image"
+                                    required
+                                />
+                                <img src="" id="image-1" alt="" class="imggmi" style="height: 100px" />
+
+                            </div>
+                            <div style="display: flex">
+                                <div id="screen1" class="imggmi image-container" style="height: 500px; width: 100%"></div>
+                                <br />
+                            </div>
+                            <button
+                                type="button"
+                                class="ms-auto me-auto btn btn-success bg-info"
+                                id="crop-1"
+                                style="margin-top: 0px; ; width: 50%; margin: 3rem 0rem 0rem 0rem"
+                            >
+                                Crop
+                            </button>
+                        </div>
+                        <div class="col-5 mb-4" style="margin: auto">
+                            {{!-- file 2 --}}
+                            <div class="form-group">
+                                <label for="imgFile2">IMAGE 2:</label>
+                                <input type="file" class="form-control image" id="imgFile2" accept="image/*" name="image" />
+                                <img src="" id="image-2" alt="" class="imggmi" style="height: 100px" />
+                            </div>
+                            <div style="display: flex">
+                                <div id="screen2" class="imggmi image-container" style="height: 500px; width: 100%"></div>
+                                <br />
+                            </div>
+                            <button
+                                type="button"
+                                class="ms-auto me-auto btn bg-info"
+                                id="crop-2"
+                                style="margin-top: 0px; display: none; width: 50%; margin: 3rem 0rem 0rem 0rem"
+                            >
+                                Crop
+                            </button>
+                            {{!----}}
+                        </div>
+
+                        <div class="col-5 mb-4" style="margin: auto">
+                            {{!-- file 1--}}
+                            <div class="form-group">
+                                <label for="imgFile3">IMAGE3</label>
+                                <input
+                                    type="file"
+                                    class="form-control image"
+                                    id="imgFile3"
+                                    accept="image/*"
+                                    name="image"
+                                    required
+                                />
+                                <img src="" id="image-3" alt="" class="imggmi" style="height: 100px" />
+                            </div>
+                            <div style="display: flex">
+                                <div id="screen3" class="imggmi image-container" style="height: 500px; width: 100%"></div>
+                                <br />
+                            </div>
+                            <button
+                                type="button"
+                                class="ms-auto me-auto btn bg-info"
+                                id="crop-3"
+                                style="margin-top: 0px; display: none; width: 50%; margin: 3rem 0rem 0rem 0rem"
+                            >
+                                Crop
+                            </button>
+                        </div>
+
+                        <div class="col-5 mb-4" style="margin: auto">
+                            {{!-- file 1--}}
+                            <div class="form-group">
+                                <label for="imgFile4">IMAGE4</label>
+                                <input
+                                    type="file"
+                                    class="form-control image"
+                                    id="imgFile4"
+                                    accept="image/*"
+                                    name="image"
+                                    required
+                                />
+                                <img src="" id="image-4" alt="" class="imggmi" style="height: 100px" />
+                            </div>
+                            <div style="display: flex">
+                                <div id="screen4" class="imggmi image-container" style="height: 500px; width: 100%"></div>
+                                <br />
+                            </div>
+                            <button
+                                type="button"
+                                class="ms-auto me-auto btn bg-info"
+                                id="crop-4"
+                                style="margin-top: 0px; display: none; width: 50%; margin: 3rem 0rem 0rem 0rem"
+                            >
+                                Crop
+                            </button>
+                        </div>
+
+                        <div class="col-12 d-flex justify-content-center mb-4">
+                            <button type="submit" class="btn btn-funky-moon mt-2 col-md-12 w-50 mb-4" id="addbtn">
+                                ADD
+                            </button>
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+    </body>
+    <!-- jQuery -->
+    {{!--
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    --}}
+
+    <script>
+        function viewImage(event) {
+            document.getElementById('imgView').src = URL.createObjectURL(event.target.files[0]);
+        }
+    </script>
+
+    <style>
+        .imggmi {
+            display: none;
+        }
+    </style>
+</html>

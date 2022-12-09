@@ -21,10 +21,11 @@ router.route('/')
       cartCount = await userHelper.getCartCount(req.session.user._id)
       wishlistCount = await userHelper.getWishlistCount(req.session.user._id)
     }
+    let categories = await userHelper.getCategories()
     let banners = await userHelper.getBanners()
-    // console.log(banners);
+    console.log(categories);
     productHelper.getAllProducts().then((products) => {
-      res.render('user/landingPage', { user: req.session.user, products, cartCount, banners, wishlistCount });
+      res.render('user/landingPage', { user: req.session.user, products, cartCount, banners, wishlistCount, categories });
     })
 
   });
@@ -192,26 +193,41 @@ router.route('/change-product-quantity')
   })
 
 router.route('/place-order')
-  .get(verifyLogin, async (req, res) => {
-    console.log(req.body);
+  .get(verifyLogin, clearCache, async (req, res) => {
     let cartTotal = await userHelper.getTotalCartAmount(req.session.user._id);
-    let addresses = await userHelper.getUserAddresses(req.session.user._id)
-    res.render('user/selectAddress', { user: req.session.user, cartTotal, addresses })
+    let addresses = await userHelper.getUserAddresses(req.session.user._id);
+    let walletErr = req.session.walletErr;
+    console.log(walletErr);
+    res.render('user/selectAddress', { user: req.session.user, cartTotal, addresses, walletErr })
+    req.session.walletErr = null;
   })
   .post(verifyLogin, async (req, res) => {
     console.log(req.body);
     let products = await userHelper.getCartProductList(req.session.user._id);
     let total = await userHelper.getTotalCartAmount(req.session.user._id);
-    userHelper.placeOrder(req.body, req.session.user._id, products, total).then((orderId) => {
-      if (req.body.paymentMethod === 'COD') {
-        res.json({ codSuccess: true });
-      } else {
-        userHelper.generateRazorpay(orderId, total).then((response) => {
-          console.log(response);
-          res.json({ response })
+    let walletAmt = await userHelper.getWalletAmount(req.session.user._id);
+
+    if (req.body.paymentMethod === 'wallet') {
+      if (walletAmt > total) {
+        userHelper.placeWalletOrder(req.body, req.session.user._id, products, total, walletAmt).then(() => {
+          res.json({ walletSuccess: true })
         })
+      } else {
+        req.session.walletErr = "Insufficient balance in wallet, Try another payment method"
+        res.json({ walletErr: true })
       }
-    })
+    } else {
+      userHelper.placeOrder(req.body, req.session.user._id, products, total).then((orderId) => {
+        if (req.body.paymentMethod === 'COD') {
+          res.json({ codSuccess: true });
+        } else {
+          userHelper.generateRazorpay(orderId, total).then((response) => {
+            console.log(response);
+            res.json({ response });
+          })
+        }
+      })
+    }
   })
 
 router.route('/verify-payment')
@@ -288,8 +304,9 @@ router.route('/remove-from-wishlist/:id')
 
 router.route('/profile')
   .get(verifyLogin, async (req, res) => {
-    let userData = await userHelper.getUserInfo(req.session.user._id)
-    res.render('user/profile', { user: req.session.user, userData })
+    let userData = await userHelper.getUserInfo(req.session.user._id);
+    let walletAmt = await userHelper.getWalletAmount(req.session.user._id);
+    res.render('user/profile', { user: req.session.user, userData, walletAmt })
   })
   .post(verifyLogin, (req, res) => {
     userHelper.updateUser(req.session.user._id, req.body).then(() => {
@@ -333,28 +350,21 @@ router.route('/wallet-history')
     })
   })
 
-/* router.route('/select-address')
-  .get(verifyLogin, async (req, res) => {
-    let addresses = await userHelper.getUserAddresses(req.session.user._id)
-    res.render('user/selectAddress', { user: req.session.user, addresses })
-  })
-
-router.route('/get-deliveryAddress')
-  .post(verifyLogin, async (req, res) => {
-    let deliveryDetails = await userHelper.getDeliveryAddress(req.session.user._id, req.body)
-    userHelper.createOrderObj(deliveryDetails, products, total).then((data) => {
-      console.log(data);
-      res.json({ data })
+router.route('/get-category-products/:id')
+  .get(async (req, res) => {
+    let categories = await userHelper.getCategories()
+    userHelper.getCategoryProducts(req.params.id).then((categoryProducts) => {
+      res.render('user/categoryProducts', { user: req.session.user, categoryProducts, categories })
     })
   })
 
 router.route('/sample')
   .get((req, res) => {
-    res.render('user/sample')
+    res.render('user/imgCrop')
   })
   .post((req, res) => {
     console.log(req.body);
-  }) */
+  })
 
 module.exports = router;
 

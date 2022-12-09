@@ -125,11 +125,11 @@ module.exports = {
         }
       ).then((data) => {
         console.log(data);
-        resolve()
+        resolve({ status: 'Changed successfully!!' })
       })
     }).catch((err) => {
       console.log(err);
-      reject()
+      reject({ status: 'Something went wrong!!' })
     })
   },
   allUsersCount: () => {

@@ -9,6 +9,7 @@ const e = require('express');
 const { adminRouteProtection, clearCache } = require('../Middlewares/routeProtection');
 const multer = require('multer');
 const { route } = require('./user');
+const { response } = require('express');
 
 // handle storage using multer
 const storage = multer.diskStorage({
@@ -81,13 +82,16 @@ router.route('/all-products')
 router.route('/categories')
   .get(adminRouteProtection, clearCache, function (req, res) {
     categoryHelper.getAllCategory().then((categories) => {
+      let categorySuccess = req.session.categorySuccess
       let categoryErr = req.session.categoryErr
-      res.render('admin/categories', { categories, admin: req.session.admin, categoryErr })
-      req.session.categoryErr = null
+      res.render('admin/categories', { categories, admin: req.session.admin, categoryErr, categorySuccess })
+      req.session.categoryErr = null;
+      req.session.categorySuccess = null;
     })
   })
   .post((req, res) => {
-    categoryHelper.addCategory(req.body).then(() => {
+    categoryHelper.addCategory(req.body).then((response) => {
+      req.session.categorySuccess = response.status
       res.redirect('/admin/categories')
     }).catch((err) => {
       req.session.categoryErr = err.status
@@ -130,8 +134,16 @@ router.route("/add-product")
 router.route("/all-orders")
   .get(adminRouteProtection, clearCache, async function (req, res) {
     await adminHelper.getAllOrders().then((orders) => {
-      console.log(orders);
-      res.render('admin/all-orders', { admin: req.session.admin, orders })
+
+      res.render('admin/all-orders',
+        {
+          admin: req.session.admin,
+          orders,
+          statusChange: req.session.orderStatus
+        }
+      )
+      req.session.orderStatus = null;
+
     })
   });
 
@@ -243,8 +255,11 @@ router.route('/edit-order-status/:id')
   .post(adminRouteProtection, (req, res) => {
     console.log(req.params.id);
     console.log(req.body.deliveryStatus);
-    adminHelper.changeOrderStatus(req.params.id, req.body.deliveryStatus).then(() => {
+    adminHelper.changeOrderStatus(req.params.id, req.body.deliveryStatus).then((response) => {
+      req.session.orderStatus = response.status
       res.redirect('/admin/all-orders')
+    }).catch((response) => {
+      req.session.orderStatus = response.status
     })
   })
 

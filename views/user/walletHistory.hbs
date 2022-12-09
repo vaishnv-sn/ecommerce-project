@@ -20,8 +20,11 @@
                                 <p class="m-0 text-dark">{{this.message}}</p>
                                 <p class=""> Amount: <strong class="text-success">{{this.amount}}</strong></p>
                             </td>
+                            {{#if this.orderId}}
                             <td>
+                                <a class="btn btn-info" href="/order-details/{{this.orderId}}">Order Details</a>
                             </td>
+                            {{/if}}
                         </tr>
                         {{/each}}
                     </tbody>
