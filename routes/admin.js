@@ -150,7 +150,6 @@ router.route("/all-orders")
 // delete product
 router.get('/delete-product/:id', clearCache, adminRouteProtection, (req, res) => {
   let prodId = req.params.id
-  // console.log(userId+'userId');
   productHelper.deleteProduct(prodId).then((responce) => {
     res.redirect('/admin/all-products')
   })
@@ -261,6 +260,15 @@ router.route('/edit-order-status/:id')
     }).catch((response) => {
       req.session.orderStatus = response.status
     })
+  })
+
+router.route('/order-details/:id')
+  .get(adminRouteProtection, async (req, res) => {
+    let orderDetails = await adminHelper.getOrderDetails(req.params.id);
+    let orderProducts = await adminHelper.getOrderedProducts(req.params.id);
+    console.log();
+    console.log(orderDetails);
+    res.render('admin/adminOrderDetails', { admin: req.session.admin, orderProducts, orderDetails });
   })
 
 

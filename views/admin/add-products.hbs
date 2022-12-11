@@ -32,12 +32,32 @@
         <label for="pro_offerPrice">Price</label>
         <input type="number" name="pro_offerPrice" class="form-control mb-4" required>
 
-        <label for="image1">Image-1</label>
-        <input type="file" id="image1" name="image1" accept="image/*" class="form-control mb-4 js-photo-upload"
-          required>
+        {{!-- Image crop and preview starts here --}}
 
-        <label for="image2">Image-2</label>
-        <input type="file" id="image2" name="image2" class="form-control mb-4" required>
+        {{!-- 1st Image file --}}
+        <div>
+          <label for="image1">Image-1</label>
+				  <div id="screen1" class="imagePreview image-container" style="height: 350px; width: 100%"></div>
+          <button type="button" class="ms-auto me-auto btn bg-warning " id="crop-1" 
+            style="display: none; width:  50% ; margin: 1rem 0rem 1rem 0rem;">
+            Crop
+				  </button>
+          <img src="" id="imagePreview-1" alt="" class="imagePreview border my-1" style="height:100px">
+          <input type="file" id="image1" name="image1" accept="image/*" class="form-control mb-4 js-photo-upload" required>
+        </div>
+
+        {{!-- 2nd Image file --}}
+        <div>
+          <label for="image2">Image-2</label>
+          <div id="screen2" class="imagePreview image-container" style="height: 350px; width: 100%"></div>
+          <button type="button" class="ms-auto me-auto btn bg-warning " id="crop-2" 
+            style=" margin-top: 0px;  display: none; width:  50% ; margin: 1rem 0rem 1rem 0rem;">
+            Crop
+				  </button>
+          <img src="" id="imagePreview-2" alt="" class="imagePreview border my-1" style="height:100px">
+          <input type="file" id="image2" name="image2" accept="image/*" class="form-control mb-4" required>
+        </div>
+        {{!-- Image crop and preview ends here --}}
 
         <label for="pro_category">Categories</label>
         <select name="pro_category" id="pro_category" class="form-control mb-4" required>
@@ -58,71 +78,110 @@
         <label for="pro_stock">Stock count</label>
         <input type="number" name="pro_stock" class="form-control mb-4" required>
 
-        <button type="submit" class="btn btn-success mt-4">Submit</button>
+        <button type="submit" id="submitButton" class="btn btn-success mt-4">Submit</button>
 
       </form>
     </div>
   </div>
 </div>
 
+<style>
+  .imagePreview{display: none;}
+</style>
 
-<!-- Below are a series of inputs which allow file selection and interaction with the cropper api -->
-{{!-- <input type="file" id="fileInput" accept="image/*" /> --}}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.js"
-  integrity="sha512-ZK6m9vADamSl5fxBPtXw6ho6A4TuX89HUbcfvxa2v2NYNT/7l8yFGJ3JlXyMN4hlNbz0il4k6DvqbIW5CCwqkw=="
-  crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.js"
-  integrity="sha512-ZK6m9vADamSl5fxBPtXw6ho6A4TuX89HUbcfvxa2v2NYNT/7l8yFGJ3JlXyMN4hlNbz0il4k6DvqbIW5CCwqkw=="
-  crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+{{!-- Preview and CropperJs functions starts from here --}}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.css"  />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.js"></script>
+
 <script>
-  let cropper;
-  let cropperModalId = '#cropperModal';
-  let $jsPhotoUploadInput = $('.js-photo-upload');
+  const imagebox1 = document.getElementById('screen1');
+  const crop_btn1 = document.getElementById('crop-1');
+  const input1 = document.getElementById('image1');
+  document.getElementById("submitButton").disabled = false;
 
-  $jsPhotoUploadInput.on('change', function () {
-    var files = this.files;
-    if (files.length > 0) {
-      var photo = files[0];
+  input1.addEventListener('change',()=>{
+    const imageData1 = input1.files[0]
+    const url1 = URL.createObjectURL(imageData1);
+    imagebox1.innerHTML = `<img src="${url1}" id="img1" style="width:100%;">`
+    const img1 = document.getElementById('img1');
+    document.getElementById("submitButton").disabled = true;
+    document.getElementById('screen1').style.display = 'block';
+    document.getElementById('crop-1').style.display = 'block';
+    document.getElementById('imagePreview-1').style.display = 'block';
 
-      var reader = new FileReader();
-      reader.onload = function (event) {
-        var image = $('.js-avatar-preview')[0];
-        image.src = event.target.result;
+    const cropper1 = new Cropper(img1, {    
+        autoCropArea: 1,
+        viewMode: 1,
+        scalable: false,
+        zoomable: false,
+        movable: false,
+        minCropBoxWidth: 50,
+        minCropBoxHeight: 50,
+        aspectRatio: 1 / 1,
+    })
 
-        cropper = new Cropper(image, {
-          viewMode: 1,
-          aspectRatio: 1,
-          minContainerWidth: 400,
-          minContainerHeight: 400,
-          minCropBoxWidth: 271,
-          minCropBoxHeight: 271,
-          movable: true,
-          ready: function () {
-            console.log('ready');
-            console.log(cropper.ready);
-          }
-        });
+    crop_btn1.addEventListener('click', () => {
+        cropper1.getCroppedCanvas().toBlob((blob) => {
+            let fileInputElement1 = document.getElementById('image1');
+            let file1 = new File([blob], imageData1.name, { type: "image/*", lastModified: new Date().getTime() });
+            let container1 = new DataTransfer();
+            container1.items.add(file1);
+            fileInputElement1.files = container1.files;
+            document.getElementById('imagePreview-1').src = URL.createObjectURL(fileInputElement1.files[0])
+            document.getElementById('screen1').style.display = 'none'
+            document.getElementById('crop-1').style.display = 'none'
+             if(document.getElementById('crop-2').style.display === 'none'){
+                document.getElementById("submitButton").disabled = false;
+            }
+    
+        })
+    })
+  })
 
-        $(cropperModalId).modal();
-      };
-      reader.readAsDataURL(photo);
-    }
-  });
+  const imagebox2 = document.getElementById('screen2');
+  const crop_btn2 = document.getElementById('crop-2');
+  const input2 = document.getElementById('image2');
+  document.getElementById("submitButton").disabled = false;
 
-  $('.js-save-cropped-avatar').on('click', function (event) {
-    event.preventDefault();
+  input2.addEventListener('change',()=>{
+    const imageData2 = input2.files[0]
+    const url2 = URL.createObjectURL(imageData2);
+    imagebox2.innerHTML = `<img src="${url2}" id="img2" style="width:100%;">`
+    const img2 = document.getElementById('img2');
+    document.getElementById("submitButton").disabled = true;
+    document.getElementById('screen2').style.display = 'block';
+    document.getElementById('crop-2').style.display = 'block';
+    document.getElementById('imagePreview-2').style.display = 'block';
 
-    console.log(cropper.ready);
+    const cropper2 = new Cropper(img2, {    
+        autoCropArea: 1,
+        viewMode: 1,
+        scalable: false,
+        zoomable: false,
+        movable: false,
+        minCropBoxWidth: 50,
+        minCropBoxHeight: 50,
+        aspectRatio: 1 / 1,
+    })
 
-    var $button = $(this);
-    $button.text('uploading...');
-    $button.prop('disabled', true);
+    crop_btn2.addEventListener('click', () => {
+        cropper2.getCroppedCanvas().toBlob((blob) => {
+            let fileInputElement2 = document.getElementById('image2');
+            let file2 = new File([blob], imageData2.name, { type: "image/*", lastModified: new Date().getTime() });
+            let container2 = new DataTransfer();
+            container2.items.add(file2);
+            fileInputElement2.files = container2.files;
+            document.getElementById('imagePreview-2').src = URL.createObjectURL(fileInputElement2.files[0])
+            document.getElementById('screen2').style.display = 'none'
+            document.getElementById('crop-2').style.display = 'none'
+             if(document.getElementById('crop-1').style.display === 'none'){
+                document.getElementById("submitButton").disabled = false;
+            }
+    
+        })
+    })
+  })
 
-    const canvas = cropper.getCroppedCanvas();
-    const base64encodedImage = canvas.toDataURL();
-    $('#avatar-crop').attr('src', base64encodedImage);
-    $(cropperModalId).modal('hide');
-  });
-
+  
 
 </script>

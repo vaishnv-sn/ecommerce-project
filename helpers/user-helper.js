@@ -418,7 +418,6 @@ module.exports = {
 
       db.get().collection(ORDER_COLLECTION).insertOne(orderObj)
         .then((data) => {
-          console.log(data);
           db.get().collection(CART_COLLECTION).deleteOne({ user: objectId(userId) });
           resolve(data.insertedId);
         })
@@ -636,23 +635,21 @@ module.exports = {
   },
 
   changePaymentStatus: (orderId) => {
-    console.log(orderId + 'orderId');
     return new Promise(async (resolve, reject) => {
-      await db.get().collection(ORDER_COLLECTION)
-        .updateOne(
-          {
-            _id: objectId(orderId)
-          },
-          {
-            $set: {
-              status: 'Placed'
-            }
+      await db.get().collection(ORDER_COLLECTION).updateOne(
+        {
+          _id: objectId(orderId)
+        },
+        {
+          $set: {
+            status: 'Placed'
           }
-        ).then((data) => {
-          console.log(data + 'status updation');
-          resolve()
-        })
-      reject()
+        }
+      ).then(() => {
+        resolve()
+      }).catch(() => {
+        reject()
+      })
     })
   },
 

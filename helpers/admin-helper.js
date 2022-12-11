@@ -1,5 +1,5 @@
 var db = require('../config/connection')
-const { USER_COLLECTION, ADMIN_COLLECTION, ORDER_COLLECTION, BANNER_COLLECTION } = require('../config/collections');
+const { USER_COLLECTION, ADMIN_COLLECTION, ORDER_COLLECTION, BANNER_COLLECTION, PRODUCT_COLLECTION } = require('../config/collections');
 var objectId = require('mongodb').ObjectId
 const bcrypt = require('bcrypt');
 
@@ -165,6 +165,54 @@ module.exports = {
       }
 
       resolve(orderStatusCount)
+    })
+  },
+  getOrderDetails: (orderId) => {
+    return new Promise((resolve, reject) => {
+      db.get().collection(ORDER_COLLECTION).findOne({ _id: objectId(orderId) }).then((data) => {
+        resolve(data)
+      })
+    })
+  },
+  getOrderedProducts: (orderId) => {
+    return new Promise(async (resolve, reject) => {
+      let products = await db.get().collection(ORDER_COLLECTION).aggregate([
+        {
+          $match: { _id: objectId(orderId) }
+        },
+        {
+          $unwind: '$products'
+        },
+        {
+
+          $project: {
+            item: '$products.item',
+            quantity: '$products.quantity',
+            totalAmount: '$totalAmount'
+
+          }
+        },
+        {
+          $lookup: {
+            from: PRODUCT_COLLECTION,
+            localField: 'item',
+            foreignField: '_id',
+            as: 'product'
+          }
+        },
+        {
+          $project: {
+            totalAmount: 1,
+            paymentMethod: 1,
+            status: 1,
+            quantity: 1,
+            deliveryDetails: 1,
+            product: { $arrayElemAt: ['$product', 0] }
+          }
+        }
+
+      ]).toArray()
+      resolve(products)
     })
   }
 

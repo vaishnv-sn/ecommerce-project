@@ -262,7 +262,6 @@ router.route('/orders')
 
 router.route('/order-details/:id')
   .get(verifyLogin, (req, res) => {
-    console.log(req.params);
     userHelper.getOrderedProducts(req.params.id).then((orderDetails) => {
       console.log(orderDetails);
       res.render('user/orderDetails', { user: req.session.user, orderDetails })

@@ -1,10 +1,22 @@
 <div class='container mt-5 p-3 rounded cart' >
     <div class='row no-gutters'>
         <div class='col-md-8'>
+            <div>
+                <p class="text-info">Date: {{orderDetails.deliveryDetails.date}} </p>
+                <h3>Order Details</h3>
+                <p class="m-0">Name: {{orderDetails.deliveryDetails.name}}</p>
+                <p class="m-0">
+                    Address: {{orderDetails.deliveryDetails.address}}
+                    {{orderDetails.deliveryDetails.locality}}
+                    {{orderDetails.deliveryDetails.pincode}}
+                </p>
+                <p>Contact No: {{orderDetails.deliveryDetails.mobile}}</p>
+            </div>
+
             <h3>Ordered Items</h3>
             <table class='table mt-5'>
                 <tbody>
-                    {{#each orderDetails}}
+                    {{#each orderProducts}}
                     <tr>
                         <td>
                             <img src="/images/product/{{this.product.image1}}" alt="" height="80">
@@ -23,7 +35,7 @@
                 </tbody>
             </table>
             <div class="p-3">
-                <p>Total Amount: <span class="text-danger">{{orderDetails.[0].totalAmount}}</span></p>
+                <p>Total Amount: <span class="text-danger">{{orderProducts.[0].totalAmount}}</span></p>
             </div>
         </div>
     </div>
