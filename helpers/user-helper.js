@@ -678,7 +678,6 @@ module.exports = {
   getUserInfo: (userId) => {
     return new Promise(async (resolve, reject) => {
       await db.get().collection(USER_COLLECTION).findOne({ _id: objectId(userId) }).then((data) => {
-        console.log(data);
         resolve(data)
       })
     })
@@ -689,22 +688,13 @@ module.exports = {
 
       let response = {}
 
-      let userfind = await db.get().collection(USER_COLLECTION).findOne({ _id: objectId(userId) })
-      console.log(userfind)
-      if (userfind) {
+      await db.get().collection(USER_COLLECTION).findOne({ _id: objectId(userId) }).then(async (data) => {
+        currentPassword = '' + currentPassword;
+        bcryptpass = await bcrypt.hash(currentPassword, 10);
 
-        currentPassword = currentPassword.toString()
-        bcryptpass = await bcrypt.hash(currentPassword, 10)
-
-        bcrypt.compare(currentPassword, userfind.password).then(async (status) => {
-          console.log(status);
-
+        bcrypt.compare(currentPassword, data.password).then(async (status) => {
           if (status) {
-
-            response.check = true;
-            response.successMessage = "password reseted successfully"
-
-            newpassword = newpassword.toString()
+            newpassword = '' + newpassword
             bcryptNewPass = await bcrypt.hash(newpassword, 10)
 
             db.get().collection(USER_COLLECTION).updateOne({ _id: objectId(userId) }, {
@@ -712,17 +702,15 @@ module.exports = {
                 password: bcryptNewPass
               }
             }).then(() => {
-              console.log(response);
-              resolve(response)
+              response.successMessage = "Password changed successfully, Please login again"
+              resolve(response);
             })
-
           } else {
-            response.check = false;
-            response.errmessage = "old password is incorrect";
-            reject(response)
+            response.errMessage = "Current password you entered is incorrect";
+            reject(response);
           }
         })
-      }
+      })
     })
   },
 

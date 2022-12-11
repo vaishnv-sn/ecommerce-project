@@ -1,17 +1,41 @@
+<style>
+	input:focus, input.form-control:focus {
+    outline:none !important;
+    outline-width: 0 !important;
+    box-shadow: none;
+    -moz-box-shadow: none;
+    -webkit-box-shadow: none;
+	}
+	input::-webkit-outer-spin-button,
+	input::-webkit-inner-spin-button {
+  	-webkit-appearance: none;
+  	margin: 0;
+}
+</style>
+
 <div class="container mt-5">
     {{#if signupMsg}}
     <div class="alert alert-success" role="alert">
         {{signupMsg}}
     </div>
     {{/if}}
-    <form action="/login" method="post">
+    
+    {{#if passwordChangeSuccess}}
+    <div class="alert alert-success" role="alert">
+        {{passwordChangeSuccess}}
+    </div>
+    {{/if}}
+    
+    <form action="/login" method="post" id="loginForm">
         <div class="form-group">
             <label for="email">Email<span class="text-danger">*</span></label>
-            <input type="email" placeholder="Email" class="form-control" name="email" required />
+            <input type="email" placeholder="Email" class="form-control" id="email" onchange="emailCheck()" onkeyup="emailCheck()" onclick="emailCheck()" name="email"/>
+            <span class="text-danger" id="emailErr"></span>
         </div>
         <div class="form-group">
             <label for="email">Password<span class="text-danger">*</span></label>
-            <input type="password" placeholder="Password" class="form-control" name="password" required />
+            <input type="password" placeholder="Password" id="password" class="form-control" onchange="passwordCheck()" onkeyup="passwordCheck()" onclick="passwordCheck()" name="password"/>
+            <span class="text-danger" id="passwordErr"></span>
         </div>
         
         {{#if loginErr}}
@@ -21,7 +45,6 @@
         <p class="error text-danger">{{blockErr}}</p>
         {{/if}}
     
-
         <button type="submit" class="btn btn-warning btn-lg my-2">Login</button>
         <br />
         <a href="/signup">create a new account</a>
@@ -35,3 +58,49 @@
         </div>
     </div>
 </div>
+
+<script>
+    const form = document.getElementById('loginForm');
+    
+    const emailErr = document.getElementById('emailErr');
+    const passwordErr = document.getElementById('passwordErr');
+    
+
+
+    function emailCheck() {
+        const email = document.getElementById('email').value.trim();
+        filter = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+        if (filter.test(email)) {
+            document.getElementById("email").style.border = "1px solid green";
+			emailErr.innerHTML = ""
+            return true;
+        } else {
+            document.getElementById("email").style.border = "1px solid red";
+			emailErr.innerHTML = "Invalid email ID"
+            return false;
+        }
+    }
+
+    function passwordCheck(){
+        const password = document.getElementById('password').value.trim();
+		if(password.length > 2){
+			document.getElementById("password").style.border = "1px solid green";
+			passwordErr.innerHTML = ''
+			return true;
+		} else {
+			document.getElementById("password").style.border = "1px solid red";
+			passwordErr.innerHTML = "Password can't be empty, also should be atleast 3 letters long"
+            return false;
+		}
+	}
+
+    form.addEventListener('submit', (e)=>{
+		e.preventDefault();
+		emailCheck();
+		passwordCheck();
+		if(emailCheck()&&passwordCheck()){
+			form.submit()
+		}
+	})
+
+</script>

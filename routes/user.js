@@ -4,11 +4,7 @@ const productHelper = require('../helpers/product-helper');
 const userHelper = require('../helpers/user-helper');
 const { response } = require('express');
 var router = express.Router();
-const { clearCache, verifyLogin } = require("../Middlewares/routeProtection");
-
-
-// verify Login middleware
-
+const { verifyLogin } = require("../Middlewares/routeProtection");
 
 /* -------------------------------------------------------------------------- */
 /*                        Landing page route                                  */
@@ -35,17 +31,22 @@ router.route('/')
 /*                          Login page route                                  */
 /* -------------------------------------------------------------------------- */
 router.route('/login')
-  .get(clearCache, function (req, res) {
+  .get(function (req, res) {
     if (req.session.userLoggedIn) {
       res.redirect('/');
     } else
-      res.render('user/login', { loginErr: req.session.loginErr, blockErr: req.session.blockedErr, signupMsg: req.session.signupSuccess });
+      res.render('user/login', {
+        loginErr: req.session.loginErr,
+        blockErr: req.session.blockedErr,
+        signupMsg: req.session.signupSuccess,
+        passwordChangeSuccess: req.session.changePasswordSuccess
+      });
     req.session.loginErr = null;
     req.session.blockedErr = null;
     req.session.signupSuccess = null;
+    req.session.changePasswordSuccess = null;
   })
   .post(function (req, res) {
-    // console.log(req.body);
     doLogin(req.body).then((response) => {
       if (response.status) {
         req.session.user = response.user
@@ -63,7 +64,7 @@ router.route('/login')
 /*                         Signup page route                                  */
 /* -------------------------------------------------------------------------- */
 router.route('/signup')
-  .get(clearCache, function (req, res) {
+  .get(function (req, res) {
     res.render('user/signup', { emailErr: req.session.emailErr });
     req.session.emailErr = null;
   })
@@ -83,9 +84,8 @@ router.route('/signup')
 /*                             View product details                           */
 /* -------------------------------------------------------------------------- */
 router.route('/view-product/:id')
-  .get(clearCache, function (req, res) {
+  .get(function (req, res) {
     productHelper.getProductDetails(req.params.id).then((product) => {
-      // console.log(product);
       res.render('user/viewProduct', { user: req.session.user, product })
     })
 
@@ -193,7 +193,7 @@ router.route('/change-product-quantity')
   })
 
 router.route('/place-order')
-  .get(verifyLogin, clearCache, async (req, res) => {
+  .get(verifyLogin, async (req, res) => {
     let cartTotal = await userHelper.getTotalCartAmount(req.session.user._id);
     let addresses = await userHelper.getUserAddresses(req.session.user._id);
     let walletErr = req.session.walletErr;
@@ -305,7 +305,13 @@ router.route('/profile')
   .get(verifyLogin, async (req, res) => {
     let userData = await userHelper.getUserInfo(req.session.user._id);
     let walletAmt = await userHelper.getWalletAmount(req.session.user._id);
-    res.render('user/profile', { user: req.session.user, userData, walletAmt })
+    res.render('user/profile', {
+      user: req.session.user,
+      userData,
+      walletAmt,
+      passwordResetFailed: req.session.changePasswordError
+    });
+    req.session.changePasswordError = null;
   })
   .post(verifyLogin, (req, res) => {
     userHelper.updateUser(req.session.user._id, req.body).then(() => {
@@ -315,11 +321,14 @@ router.route('/profile')
 
 router.route('/change-password')
   .post(verifyLogin, (req, res) => {
-    console.log(req.body);
     userHelper.changePassword(req.body, req.session.user._id).then((response) => {
-      res.redirect('/profile')
+      req.session.changePasswordSuccess = response.successMessage;
+      req.session.user = false;
+      req.session.userLoggedIn = false;
+      res.redirect('/login')
     }).catch((response) => {
-      res.redirect('/profile')
+      req.session.changePasswordError = response.errMessage;
+      res.redirect('/profile');
     })
   })
 

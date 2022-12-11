@@ -1,64 +1,57 @@
-<script type="text/javascript">
-    function validate() {
-        let oldPw = document.getElementById('currentPassword');
-        let newPw = document.getElementById('newPassword');
-        let reNewPw = document.getElementById('renewPassword');
-
-        if (oldPw.value.trim() == "") {
-            //alert('blank')
-            oldPw.style.border = "solid 2px red";
-            document.getElementById("message1").innerHTML = "**Fill the password please!";
-            return false;
-        } else if (newPw.value.trim() == "") {
-            newPw.style.border = "solid 2px red";
-            document.getElementById("message2").innerHTML = "**Fill the New password please!";
-            return false;
-        } else if (reNewPw.value != newPw.value) {
-            reNewPw.style.border = "solid 2px red";
-            document.getElementById("message3").innerHTML = "**Passwords are not same.";
-            return false;
-        } else {
-            return true;
-        }
-    }
-</script>
-
+<style>
+    input:focus, input.form-control:focus {
+    outline:none !important;
+    outline-width: 0 !important;
+    box-shadow: none;
+    -moz-box-shadow: none;
+    -webkit-box-shadow: none;
+	}
+	input::-webkit-outer-spin-button,
+	input::-webkit-inner-spin-button {
+  	-webkit-appearance: none;
+  	margin: 0;
+}
+</style>
 <main id="main" class="main">
-
     <section class="section profile">
         <div class="row">
             <div class="col-xl-4">
 
                 <div class="card mt-3 ml-3">
                     <div class="card-body profile-card pt-4 d-flex flex-column align-items-center">
-
                         <img src="https://cdn4.vectorstock.com/i/1000x1000/06/18/male-avatar-profile-picture-vector-10210618.jpg"
                             alt="Profile" class="rounded-circle" width="250">
-                        <h2> Hi <span class="text-primary">{{user.fname}}</span></h2>
+                        <h2>Hey, <span class="text-primary">{{userData.fname}}</span> 👋</h2>
                         <p class="m-0 font-weight-bold">Wallet Balance: <span class="text-success">{{walletAmt}}</span></p>
                         <a href="/wallet-history" class="btn btn-warning text-dark">Wallet history</a>
                         <p class="mt-3 mb-0">Referral code: <span class="text-info">{{user.referral}}</span></p>
                     </div>
                 </div>
-
             </div>
 
-            <div class="col-xl-8">
+            
 
+            <div class="col-xl-8">
+                {{#if passwordResetFailed}}
+                <div class="alert m-2 alert-danger" role="alert">
+                {{passwordResetFailed}}
+                </div>
+                {{/if}}
+                
                 <div class="card m-3">
                     <div class="card-body pt-3">
                         <div class="tab-content pt-2">
-
                             <div class="" id="profile-edit">
 
                                 <!-- Profile Edit Form -->
-                                <form method="post" action="/profile">
+                                <form method="post" action="/profile" id="infoForm">
 
                                     <div class="row mb-3">
                                         <label for="fname" class="col-md-4 col-lg-3 col-form-label">First Name</label>
                                         <div class="col-md-8 col-lg-9">
                                             <input name="fname" type="text" class="form-control" id="fname"
-                                                value="{{userData.fname}}">
+                                                value="{{userData.fname}}" onclick="fnameCheck()" onkeyup="fnameCheck()" onchange="fnameCheck()">
+                                            <span class="text-danger" id="fname-error"> </span>
                                         </div>
                                     </div>
 
@@ -66,7 +59,8 @@
                                         <label for="number" class="col-md-4 col-lg-3 col-form-label">Mobile</label>
                                         <div class="col-md-8 col-lg-9">
                                             <input name="number" type="text" class="form-control" id="number"
-                                                value="{{userData.number}}">
+                                                value="{{userData.number}}" onclick="phoneCheck()" onkeyup="phoneCheck()" onchange="phoneCheck()">
+                                            <span class="text-danger" id="number-error"> </span>
                                         </div>
                                     </div>
 
@@ -74,29 +68,30 @@
                                         <label for="email" class="col-md-4 col-lg-3 col-form-label">Email</label>
                                         <div class="col-md-8 col-lg-9">
                                             <input name="email" type="email" class="form-control" id="email"
-                                                value="{{userData.email}}">
+                                                value="{{userData.email}}" onclick="emailCheck()" onkeyup="emailCheck()" onchange="emailCheck()">
+                                            <span class="text-danger" id="email-error"> </span>
                                         </div>
                                     </div>
 
                                     <div class="text-center">
                                         <button type="submit" class="btn btn-primary">Save Changes</button>
                                     </div>
-                                </form><!-- End Profile Edit Form -->
-
+                                </form>
+                                <!-- End Profile Edit Form -->
                             </div>
 
 
                             <div class=" pt-3" id="profile-change-password">
                                 <!-- Change Password Form -->
-                                <form method="post" action="/change-password" onsubmit="return validate()">
+                                <form method="post" action="/change-password" id="passwordForm">
 
                                     <div class="row mb-3">
-                                        <label for="currentPassword" class="col-md-4 col-lg-3 col-form-label">Current
+                                        <label for="oldPassword" class="col-md-4 col-lg-3 col-form-label">Current
                                             Password</label>
                                         <div class="col-md-8 col-lg-9">
                                             <input name="currentPassword" type="password" class="form-control"
-                                                id="currentPassword">
-                                            <span id="message1" style="color:red"></span>
+                                                id="oldPassword" onclick="oldPasswordCheck()" onkeyup="oldPasswordCheck()" onchange="oldPasswordCheck()">
+                                            <span class="text-danger" id="oldPassword-error"> </span>
                                         </div>
                                     </div>
 
@@ -105,17 +100,18 @@
                                             Password</label>
                                         <div class="col-md-8 col-lg-9">
                                             <input name="newpassword" type="password" class="form-control"
-                                                id="newPassword">
-                                            <span id="message2" style="color:red"></span>
+                                                id="newPassword" onclick="newPasswordCheck()" onkeyup="newPasswordCheck()" onchange="newPasswordCheck()">
+                                            <span class="text-danger" id="newPassword-error"> </span>
                                         </div>
                                     </div>
 
                                     <div class="row mb-3">
-                                        <label for="renewPassword" class="col-md-4 col-lg-3 col-form-label">Re-enter New
-                                            Password</label>
+                                        <label for="renewPassword" class="col-md-4 col-lg-3 col-form-label">
+                                            Re-enter New Password
+                                        </label>
                                         <div class="col-md-8 col-lg-9">
-                                            <input type="password" class="form-control" id="renewPassword">
-                                            <span id="message3" style="color:red"></span>
+                                            <input type="password" class="form-control" id="reNewPassword" onclick="reNewPasswordCheck()" onkeyup="reNewPasswordCheck()" onchange="reNewPasswordCheck()">
+                                            <span class="text-danger" id="reNewPassword-error"> </span>
                                         </div>
                                     </div>
 
@@ -123,17 +119,147 @@
                                         <button type="submit" class="btn btn-primary">Change Password</button>
                                     </div>
 
-                                </form><!-- End Change Password Form -->
-
+                                </form>
+                                <!-- End Change Password Form -->
                             </div>
-
-                        </div><!-- End Bordered Tabs -->
-
+                        </div>
+                        <!-- End Bordered Tabs -->
                     </div>
                 </div>
-
             </div>
         </div>
     </section>
+</main>
+<!-- End #main -->
 
-</main><!-- End #main -->
+<script>
+    const infoForm = document.getElementById('infoForm');
+    const passwordForm = document.getElementById('passwordForm');
+	
+    function fnameCheck() {
+        let fname = document.getElementById('fname').value.trim();
+        filter = /^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$/;
+        let nameErr = document.getElementById('fname-error');
+        if (filter.test(fname) && fname.length > 3) {
+            document.getElementById("fname").style.border = "1px solid green";
+			nameErr.innerHTML = ""
+            return true;
+        } else {
+            document.getElementById("fname").style.border = "1px solid red";
+			nameErr.innerHTML = "Name should be atleast 4 letters long."
+            return false;
+        }
+    }
+
+    function emailCheck() {
+        let email = document.getElementById('email').value.trim();
+    	let emailErr = document.getElementById('email-error');
+        filter = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+        if (filter.test(email)) {
+            document.getElementById("email").style.border = "1px solid green";
+			emailErr.innerHTML = ""
+            return true;
+        } else {
+            document.getElementById("email").style.border = "1px solid red";
+			emailErr.innerHTML = "Invalid Email ID"
+            return false;
+        }
+    }
+
+    function phoneCheck(){
+        let phone = document.getElementById('number').value.trim();
+	    let phoneErr = document.getElementById('number-error');
+        if(phone.length === 10){
+            document.getElementById("number").style.border = "1px solid green";
+			phoneErr.innerHTML = ""
+            return true;
+        } else {
+            document.getElementById("number").style.border = "1px solid red";
+			phoneErr.innerHTML = "Enter a 10 digit valid phone number"
+            return false;
+        }
+    }
+
+	function oldPasswordCheck(){
+        let oldPassword = document.getElementById('oldPassword').value.trim();
+    	let oldPasswordErr = document.getElementById('oldPassword-error');
+		if(oldPassword.length > 2){
+			document.getElementById("oldPassword").style.border = "1px solid green";
+			oldPasswordErr.innerHTML = ''
+			return true;
+		} else {
+			document.getElementById("oldPassword").style.border = "1px solid red";
+			oldPasswordErr.innerHTML = 'Your current password is atleast 3 letters long for sure'
+            return false;
+		}
+	}
+
+    function newPasswordCheck(){
+        let newPassword = document.getElementById('newPassword').value.trim();
+        let newPasswordErr = document.getElementById('newPassword-error');
+		if(newPassword.length > 2){
+			document.getElementById("newPassword").style.border = "1px solid green";
+			newPasswordErr.innerHTML = ''
+			return true;
+		} else {
+			document.getElementById("newPassword").style.border = "1px solid red";
+			newPasswordErr.innerHTML = 'New password should be atleast 3 letters long'
+            return false;
+		}
+	}
+
+	function reNewPasswordCheck(){
+        let reNewPassword = document.getElementById('reNewPassword').value.trim();
+    	let reNewPasswordErr = document.getElementById('reNewPassword-error');
+		let newPassword = document.getElementById('newPassword').value.trim();
+		if(reNewPassword === newPassword&&reNewPassword!=''){
+			document.getElementById("reNewPassword").style.border = "1px solid green";
+			reNewPasswordErr.innerHTML = ''
+			return true;
+		} else {
+			document.getElementById("reNewPassword").style.border = "1px solid red";
+			reNewPasswordErr.innerHTML = 'New password confirmation does not match'
+            return false;
+		}
+	}
+    
+
+    infoForm.addEventListener('submit', (e)=>{
+        console.log()
+        e.preventDefault();
+        fnameCheck();
+        emailCheck();
+        phoneCheck();
+        if(fnameCheck()&&emailCheck()&&phoneCheck()){
+            swal("Nailed it!", "Your profile updated successfully", "success").then(()=>{
+                infoForm.submit()
+            })
+        } else{
+            swal("Something went wrong", "Follow our guidelines while entering informations.", "error");
+        }
+    });
+
+    passwordForm.addEventListener('submit', (e)=>{
+        e.preventDefault();
+        oldPasswordCheck();
+        newPasswordCheck();
+        reNewPasswordCheck();
+        if(oldPasswordCheck()&&newPasswordCheck()&&reNewPasswordCheck()){
+            swal({
+                title: "Are you sure?",
+                text: "This action will log you out from this site, You will have to login again.",
+                icon: "info",
+                buttons: true,
+                dangerMode: true,
+                })
+                .then((willDelete) => {
+                if (willDelete) {
+                    passwordForm.submit();
+                }
+            });
+            
+        } else{
+            swal("Something went wrong", "Follow our guidelines while entering informations.", "error");
+        }
+    });
+</script>

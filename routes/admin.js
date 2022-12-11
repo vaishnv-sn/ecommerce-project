@@ -6,7 +6,7 @@ var productHelper = require('../helpers/product-helper');
 var categoryHelper = require('../helpers/category-helper');
 const chartHelper = require('../helpers/chart-helper');
 const e = require('express');
-const { adminRouteProtection, clearCache } = require('../Middlewares/routeProtection');
+const { adminRouteProtection } = require('../Middlewares/routeProtection');
 const multer = require('multer');
 const { route } = require('./user');
 const { response } = require('express');
@@ -51,7 +51,7 @@ router.route('/')
 
 /* GET users listing. */
 router.route('/all-users')
-  .get(adminRouteProtection, clearCache, function (req, res) {
+  .get(adminRouteProtection, function (req, res) {
     adminHelper.getAllUsers().then((users) => {
       // console.log(users);
       res.render('admin/list-users', { users, admin: req.session.admin })
@@ -60,7 +60,7 @@ router.route('/all-users')
 
 // add user
 router.route('/add-user')
-  .get(adminRouteProtection, clearCache, function (req, res) {
+  .get(adminRouteProtection, function (req, res) {
     res.render('admin/add-user', { admin: req.session.admin })
   })
   .post(function (req, res) {
@@ -71,7 +71,7 @@ router.route('/add-user')
 
 /* GET users listing. */
 router.route('/all-products')
-  .get(adminRouteProtection, clearCache, function (req, res) {
+  .get(adminRouteProtection, function (req, res) {
     productHelper.getAllProducts().then((products) => {
       // console.log(products);
       res.render('admin/list-products', { admin: req.session.admin, products })
@@ -80,7 +80,7 @@ router.route('/all-products')
 
 /* Categories route */
 router.route('/categories')
-  .get(adminRouteProtection, clearCache, function (req, res) {
+  .get(adminRouteProtection, function (req, res) {
     categoryHelper.getAllCategory().then((categories) => {
       let categorySuccess = req.session.categorySuccess
       let categoryErr = req.session.categoryErr
@@ -101,7 +101,7 @@ router.route('/categories')
 
 /* Delete Category route */
 router.route('/delete-category/:id')
-  .get(adminRouteProtection, clearCache, (req, res) => {
+  .get(adminRouteProtection, (req, res) => {
     categoryHelper.deleteCategory(req.params.id).then(() => {
       res.redirect('/admin/categories')
     })
@@ -110,7 +110,7 @@ router.route('/delete-category/:id')
 
 /* Product adding route */
 router.route("/add-product")
-  .get(adminRouteProtection, clearCache, function (req, res) {
+  .get(adminRouteProtection, function (req, res) {
     categoryHelper.getAllCategory().then((categories) => {
       res.render('admin/add-products', { categories, admin: req.session.admin })
     })
@@ -132,7 +132,7 @@ router.route("/add-product")
 
 // all orders route
 router.route("/all-orders")
-  .get(adminRouteProtection, clearCache, async function (req, res) {
+  .get(adminRouteProtection, async function (req, res) {
     await adminHelper.getAllOrders().then((orders) => {
 
       res.render('admin/all-orders',
@@ -148,7 +148,7 @@ router.route("/all-orders")
   });
 
 // delete product
-router.get('/delete-product/:id', clearCache, adminRouteProtection, (req, res) => {
+router.get('/delete-product/:id', adminRouteProtection, (req, res) => {
   let prodId = req.params.id
   productHelper.deleteProduct(prodId).then((responce) => {
     res.redirect('/admin/all-products')
@@ -157,7 +157,7 @@ router.get('/delete-product/:id', clearCache, adminRouteProtection, (req, res) =
 
 // edit product
 router.route('/edit-product/:id')
-  .get(adminRouteProtection, clearCache, (req, res) => {
+  .get(adminRouteProtection, (req, res) => {
     productHelper.getProductDetails(req.params.id).then(async (product) => {
       let categories = await categoryHelper.getAllCategory(req.params.id)
       // console.log(categories);
@@ -181,7 +181,7 @@ router.route('/edit-product/:id')
 
 // Block User
 router.route('/block-user/:id')
-  .get(adminRouteProtection, clearCache, (req, res) => {
+  .get(adminRouteProtection, (req, res) => {
     // console.log(req.params.id);
     adminHelper.blockUser(req.params.id).then(() => {
       res.redirect('/admin/all-users')
@@ -190,7 +190,7 @@ router.route('/block-user/:id')
 
 // Unblock User
 router.route('/unblock-user/:id')
-  .get(adminRouteProtection, clearCache, (req, res) => {
+  .get(adminRouteProtection, (req, res) => {
     adminHelper.unblockUser(req.params.id).then(() => {
       res.redirect('/admin/all-users')
     })
