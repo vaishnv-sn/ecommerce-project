@@ -1,4 +1,4 @@
-<div class='container mt-5 p-3 rounded cart' style="height: 55vh;">
+<div class='container mt-5 p-3 rounded cart' style="min-height: 55vh;">
     <div class='row no-gutters'>
         <div class='col-md-8'>
             {{#if orders}}
@@ -10,13 +10,13 @@
                         <th scope='col'>Payment Method</th>
                         <th scope="col">Amount</th>
                         <th scope="col">view order</th>
-                        <th scope="col">Cancel</th>
+                        <th scope="col">Cancel/Return</th>
                     </tr>
                 </thead>
                 <tbody>
                     {{#each orders}}
                     <tr>
-                        <td>{{this.deliveryDetails.date}}</td>
+                        <td>{{this.date}}</td>
                         <td id="status">{{this.status}}</td>
                         <td>{{this.paymentMethod}}</td>
                         <td>{{this.totalAmount}}</td>
@@ -24,7 +24,19 @@
                             <a class="btn btn-info" href="/order-details/{{this._id}}">View Details</a>
                         </td>
                         <td>
+                            {{#if this.cancelled}}
+                            <p class="text-danger">Order Cancelled</p>
+                            {{else}}
+                            {{#if this.delivered}}
+                            <a class="btn btn-warning" href="/return-order/{{this._id}}">Return</a>
+                            {{else}}
+                             {{#if this.returned}}
+                            <p class="text-warning">Item returned</p>
+                            {{else}}
                             <button class="btn btn-danger" onclick="cancelOrder('{{this._id}}')">Cancel</button>
+                            {{/if}}
+                            {{/if}}
+                            {{/if}}
                         </td>
                     </tr>
                     {{/each}}
@@ -48,7 +60,10 @@
             method: 'post',
             success: (response) => {
                 if (response.status) {
-                    location.reload()
+                    swal("Cancelled!", "Your order is cancelled").then(()=>{
+                        location.reload()
+                    })
+                    
                 }
             }
         })

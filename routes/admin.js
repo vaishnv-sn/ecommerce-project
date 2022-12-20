@@ -73,7 +73,6 @@ router.route('/add-user')
 router.route('/all-products')
   .get(adminRouteProtection, function (req, res) {
     productHelper.getAllProducts().then((products) => {
-      // console.log(products);
       res.render('admin/list-products', { admin: req.session.admin, products })
     })
   });
@@ -116,18 +115,12 @@ router.route("/add-product")
     })
   })
   .post(upload.fields([{ name: 'image1', maxCount: 1 }, { name: 'image2', maxCount: 1 },]), function (req, res) {
-
     let product = req.body
     product.image1 = req.files.image1[0].filename
     product.image2 = req.files.image2[0].filename
-    console.log(product);
-
-
     productHelper.addProduct(product).then((data) => {
-      // console.log(data)
       res.redirect('/admin/all-products')
     })
-
   });
 
 // all orders route
@@ -245,15 +238,12 @@ router.route('/dashboard')
 
     let userCount = await adminHelper.allUsersCount()
     let orderStatusCount = await adminHelper.orderStatusCount()
-    console.log(orderStatusCount);
 
     res.render('admin/dashboard', { admin: req.session.admin, userCount, orderStatusCount })
   })
 
 router.route('/edit-order-status/:id')
   .post(adminRouteProtection, (req, res) => {
-    console.log(req.params.id);
-    console.log(req.body.deliveryStatus);
     adminHelper.changeOrderStatus(req.params.id, req.body.deliveryStatus).then((response) => {
       req.session.orderStatus = response.status
       res.redirect('/admin/all-orders')
@@ -266,9 +256,33 @@ router.route('/order-details/:id')
   .get(adminRouteProtection, async (req, res) => {
     let orderDetails = await adminHelper.getOrderDetails(req.params.id);
     let orderProducts = await adminHelper.getOrderedProducts(req.params.id);
-    console.log();
     console.log(orderDetails);
     res.render('admin/adminOrderDetails', { admin: req.session.admin, orderProducts, orderDetails });
+  })
+
+router.route('/sales-report')
+  .get(adminRouteProtection, async (req, res) => {
+    let salesData = await adminHelper.fetchYearAndMonthSale();
+    let monthSale = salesData.monthSale;
+    let yearSale = salesData.yearSale;
+    let allCount = await adminHelper.allCount();
+    let sales = await adminHelper.fetchSales();
+    let userCount = await adminHelper.getUserCount();
+    let monthNames = await adminHelper.fetchMonth();
+    let noOfOrders = await adminHelper.getOrderCount();
+    let orderList = await adminHelper.getCustomOrdersList();
+    console.log(sales);
+    res.render('admin/salesReport', {
+      admin: req.session.admin,
+      userCount,
+      sales,
+      allCount,
+      monthNames,
+      monthSale,
+      yearSale,
+      noOfOrders,
+      orderList
+    });
   })
 
 

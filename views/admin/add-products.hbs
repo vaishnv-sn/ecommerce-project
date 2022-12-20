@@ -11,6 +11,19 @@
     cursor: default;
     border: 1px solid black;
   }
+
+  input:focus, input.form-control:focus {
+    outline:none !important;
+    outline-width: 0 !important;
+    box-shadow: none;
+    -moz-box-shadow: none;
+    -webkit-box-shadow: none;
+	}
+	input::-webkit-outer-spin-button,
+	input::-webkit-inner-spin-button {
+  	-webkit-appearance: none;
+  	margin: 0;
+}
 </style>
 
 <div class="container mt-4">
@@ -18,24 +31,35 @@
     <div class="col-md-6">
       <h2 class="text-center">Add Product</h2>
 
-      <form action="/admin/add-product" enctype="multipart/form-data" method="post">
+      <form action="/admin/add-product" enctype="multipart/form-data" id="productForm" method="post">
+        <div class="mb-4">
+          <label for="pro_title">Product Title</label>
+          <input type="text" id="pro_title" name="pro_title" class="form-control" onclick="titleCheck()" onkeyup="titleCheck()" onchange="titleCheck()">
+          <span class="text-danger" id="pro_title-error"></span>
+        </div>
+        
+        <div class="mb-4">
+          <label for="pro_description">Description</label>
+          <textarea class="form-control" name="pro_description" id="pro_description" rows="2" onclick="descriptionCheck()" onkeyup="descriptionCheck()" onchange="descriptionCheck()"></textarea>
+          <span class="text-danger" id="pro_description-error"></span>
+        </div>
+        
+        <div class="mb-4">
+          <label for="pro_price">Offer Price</label>
+          <input type="number" name="pro_price" id="pro_price" class="form-control" onclick="priceCheck()" onkeyup="priceCheck()" onchange="priceCheck()">
+          <span class="text-danger" id="pro_price-error"></span>
+        </div>
 
-        <label for="pro_title">Product Title</label>
-        <input type="text" name="pro_title" class="form-control mb-4" required>
-
-        <label for="pro_description">Description</label>
-        <input type="text" name="pro_description" class="form-control mb-4" required>
-
-        <label for="pro_price">Offer Price</label>
-        <input type="number" name="pro_price" class="form-control mb-4" required>
-
-        <label for="pro_offerPrice">Price</label>
-        <input type="number" name="pro_offerPrice" class="form-control mb-4" required>
+        <div class="mb-4">
+          <label for="pro_offerPrice">Price</label>
+          <input type="number" name="pro_offerPrice" id="pro_offerPrice" class="form-control" onclick="offerPriceCheck()" onkeyup="offerPriceCheck()" onchange="offerPriceCheck()">
+          <span class="text-danger" id="pro_offerPrice-error"></span>
+        </div>
 
         {{!-- Image crop and preview starts here --}}
 
         {{!-- 1st Image file --}}
-        <div>
+        <div class="mb-4">
           <label for="image1">Image-1</label>
 				  <div id="screen1" class="imagePreview image-container" style="height: 350px; width: 100%"></div>
           <button type="button" class="ms-auto me-auto btn bg-warning " id="crop-1" 
@@ -43,11 +67,12 @@
             Crop
 				  </button>
           <img src="" id="imagePreview-1" alt="" class="imagePreview border my-1" style="height:100px">
-          <input type="file" id="image1" name="image1" accept="image/*" class="form-control mb-4 js-photo-upload" required>
+          <input type="file" id="image1" name="image1" accept="image/*" class="form-control">
+          <span class="text-danger" id="image1-error"></span>
         </div>
 
         {{!-- 2nd Image file --}}
-        <div>
+        <div class="mb-4">
           <label for="image2">Image-2</label>
           <div id="screen2" class="imagePreview image-container" style="height: 350px; width: 100%"></div>
           <button type="button" class="ms-auto me-auto btn bg-warning " id="crop-2" 
@@ -55,28 +80,29 @@
             Crop
 				  </button>
           <img src="" id="imagePreview-2" alt="" class="imagePreview border my-1" style="height:100px">
-          <input type="file" id="image2" name="image2" accept="image/*" class="form-control mb-4" required>
+          <input type="file" id="image2" name="image2" accept="image/*" class="form-control">
+          <span class="text-danger" id="image2-error"></span>
         </div>
+
         {{!-- Image crop and preview ends here --}}
 
-        <label for="pro_category">Categories</label>
-        <select name="pro_category" id="pro_category" class="form-control mb-4" required>
-          <option value="" disabled selected hidden>Choose category</option>
-          {{#each categories}}
-          <option value="{{this.category}}">{{this.category}}</option>
-          {{/each}}
-        </select>
-
-        <label for="pro_gender">Gender</label>
-        <select name="pro_gender" id="pro_gender" class="form-control mb-4" required>
-          <option value="" disabled selected hidden>Choose gender</option>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-          <option value="unisex">Unisex</option>
-        </select>
-
-        <label for="pro_stock">Stock count</label>
-        <input type="number" name="pro_stock" class="form-control mb-4" required>
+        <div class="mb-4">
+          <label for="pro_category">Categories</label>
+          <select name="pro_category" id="pro_category" class="form-control" >
+            <option value="" disabled selected hidden>Choose category</option>
+            {{#each categories}}
+            <option value="{{this.category}}">{{this.category}}</option>
+            {{/each}}
+          </select>
+          <span class="text-danger" id="pro_category-error"></span>
+        </div>
+        
+        <div class="mb-4">
+          <label for="pro_stock">Stock count</label>
+          <input type="number" name="pro_stock" id="pro_stock" class="form-control" onclick="stockCheck()" onkeyup="stockCheck()" onchange="stockCheck()">
+          <span class="text-danger" id="pro_stock-error"></span>
+        </div>
+        
 
         <button type="submit" id="submitButton" class="btn btn-success mt-4">Submit</button>
 
@@ -88,6 +114,143 @@
 <style>
   .imagePreview{display: none;}
 </style>
+
+<script>
+  const productForm = document.getElementById('productForm');
+
+  function titleCheck(){
+    const title = document.getElementById('pro_title');
+    const titleErr = document.getElementById('pro_title-error');
+
+    if (title.value.trim().length > 4) {
+      title.style.border = "1px solid green";
+			titleErr.innerHTML = ""
+      return true;
+    } else {
+      title.style.border = "1px solid red";
+			titleErr.innerHTML = "Atleast 5 letters"
+      return false;
+    }
+
+  }
+  function descriptionCheck(){
+    const description = document.getElementById('pro_description');
+    const descriptionErr = document.getElementById('pro_description-error');
+
+    if (description.value.trim().length > 9) {
+      description.style.border = "1px solid green";
+			descriptionErr.innerHTML = ""
+      return true;
+    } else {
+      description.style.border = "1px solid red";
+			descriptionErr.innerHTML = "Atleast 10 letters"
+      return false;
+    }
+  }
+  function priceCheck(){
+    const price = document.getElementById('pro_price');
+    const priceErr = document.getElementById('pro_price-error');
+
+    if (price.value > 0) {
+      price.style.border = "1px solid green";
+			priceErr.innerHTML = ""
+      return true;
+    } else {
+      price.style.border = "1px solid red";
+			priceErr.innerHTML = "Offer price can't be zero"
+      return false;
+    }
+  }
+  function offerPriceCheck(){
+    const price = document.getElementById('pro_price');
+    const offerPrice = document.getElementById('pro_offerPrice');
+    const offerPriceErr = document.getElementById('pro_offerPrice-error');
+
+    if (offerPrice.value > 0 && offerPrice.value > price.value) {
+      offerPrice.style.border = "1px solid green";
+			offerPriceErr.innerHTML = ""
+      return true;
+    } else {
+      offerPrice.style.border = "1px solid red";
+			offerPriceErr.innerHTML = "Price should be greater than offer price"
+      return false;
+    }
+  }
+  function stockCheck(){
+    const stock = document.getElementById('pro_stock');
+    const stockErr = document.getElementById('pro_stock-error');
+
+    if (stock.value > 0) {
+      stock.style.border = "1px solid green";
+			stockErr.innerHTML = ""
+      return true;
+    } else {
+      stock.style.border = "1px solid red";
+			stockErr.innerHTML = "Stock can't be zero"
+      return false;
+    }
+  }
+  function imageOneCheck(){
+    const imageOne = document.getElementById('image1').value;
+    const imageOneErr = document.getElementById('image1-error');
+    console.log(imageOne)
+
+    if (imageOne) {
+			imageOneErr.innerHTML = ""
+      return true;
+    } else {
+      //imageOne.style.border = "1px solid red";
+			imageOneErr.innerHTML = "Image one is compulsory"
+      return false;
+    }
+  }
+  function imageTwoCheck(){
+    const imageTwo = document.getElementById('image2').value;
+    const imageTwoErr = document.getElementById('image2-error');
+    
+    if (imageTwo) {
+			imageTwoErr.innerHTML = ""
+      return true;
+    } else {
+      //imageTwo.style.border = "1px solid red";
+			imageTwoErr.innerHTML = "Image two is compulsory"
+      return false;
+    }
+  }
+  function categoryCheck(){
+    const category = document.getElementById('pro_category').value;
+    const categoryErr = document.getElementById('pro_category-error');
+    console.log(category)
+    if (category) {
+			categoryErr.innerHTML = ""
+      return true;
+    } else {
+      //category.style.border = "1px solid red";
+			categoryErr.innerHTML = "Category is compulsory"
+      return false;
+    }
+  }
+
+  productForm.addEventListener('submit', (e)=>{
+    e.preventDefault();
+    titleCheck();
+    descriptionCheck();
+    priceCheck();
+    offerPriceCheck();
+    stockCheck();
+    imageOneCheck();
+    imageTwoCheck();
+    categoryCheck();
+
+    if(titleCheck()&&descriptionCheck()&&priceCheck()&&offerPriceCheck()
+    &&stockCheck()&&imageOneCheck()&&imageTwoCheck()&&categoryCheck()){
+      productForm.submit()
+      }else{
+        swal("Something went wrong", "Follow our guidelines to add product properly", "error")
+      }
+  })
+
+</script>
 
 {{!-- Preview and CropperJs functions starts from here --}}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.css"  />
@@ -133,7 +296,6 @@
              if(document.getElementById('crop-2').style.display === 'none'){
                 document.getElementById("submitButton").disabled = false;
             }
-    
         })
     })
   })
@@ -181,7 +343,6 @@
         })
     })
   })
-
-  
-
 </script>
+{{!-- Preview and CropperJs functions ends here --}}
+

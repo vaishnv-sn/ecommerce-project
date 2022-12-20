@@ -59,29 +59,52 @@ module.exports = {
   getAllOrders: () => {
     return new Promise(async (resolve, reject) => {
       let orders = await db.get().collection(ORDER_COLLECTION).find().toArray()
-      resolve(orders)
+      resolve(orders.reverse())
     })
   },
   cancelOrder: (orderId) => {
-    console.log(orderId);
     return new Promise(async (resolve, reject) => {
-      await db.get().collection(ORDER_COLLECTION).updateOne(
+      await db.get().collection(ORDER_COLLECTION).findOneAndUpdate(
         {
           _id: objectId(orderId)
         },
         {
           $set: {
-            status: 'Cancelled'
+            status: 'Cancelled',
+            cancelled: true
           }
         }
       ).then((data) => {
-        console.log(data);
-        resolve()
+        if (data.value.paymentMethod != "COD") {
+          data = data.value
+          let amount = data.totalAmount
+          db.get().collection(USER_COLLECTION).updateOne(
+            {
+              _id: objectId(data.userId)
+            },
+            {
+              $inc: {
+                wallet: amount
+              },
+              $push: {
+                walletHistory: {
+                  date: data.date,
+                  message: "Order cancelled, Refund Initialized",
+                  amount: amount,
+                  orderId: orderId
+                }
+              }
+            }
+          ).then(() => {
+            resolve()
+          })
+        } else {
+          resolve()
+        }
       })
     })
   },
   editBanners: (banners) => {
-    console.log(banners);
     return new Promise(async (resolve, reject) => {
       await db.get().collection(BANNER_COLLECTION).updateOne(
         {
@@ -95,8 +118,7 @@ module.exports = {
           }
 
         }
-      ).then((data) => {
-        // console.log(data);
+      ).then(() => {
         resolve()
       })
     })
@@ -115,23 +137,42 @@ module.exports = {
     })
   },
   changeOrderStatus: (orderId, orderStatus) => {
+    console.log(orderStatus);
     return new Promise(async (resolve, reject) => {
-      await db.get().collection(ORDER_COLLECTION).updateOne(
-        { _id: objectId(orderId) },
-        {
-          $set: {
-            status: orderStatus
+      if (orderStatus === 'Delivered') {
+        await db.get().collection(ORDER_COLLECTION).updateOne(
+          { _id: objectId(orderId) },
+          {
+            $set: {
+              status: orderStatus,
+              delivered: true
+            }
           }
-        }
-      ).then((data) => {
-        console.log(data);
-        resolve({ status: 'Changed successfully!!' })
-      })
-    }).catch((err) => {
-      console.log(err);
-      reject({ status: 'Something went wrong!!' })
+        ).then(() => {
+          resolve({ status: 'Changed successfully!!' })
+        }).catch((err) => {
+          console.log(err);
+          reject({ status: 'Something went wrong!!' })
+        })
+      } else {
+        await db.get().collection(ORDER_COLLECTION).updateOne(
+          { _id: objectId(orderId) },
+          {
+            $set: {
+              status: orderStatus,
+              delivered: false
+            }
+          }
+        ).then(() => {
+          resolve({ status: 'Changed successfully!!' })
+        }).catch((err) => {
+          console.log(err);
+          reject({ status: 'Something went wrong!!' })
+        })
+      }
     })
   },
+
   allUsersCount: () => {
     return new Promise(async (resolve, reject) => {
       let totalUsers = await db.get().collection(USER_COLLECTION).count();
@@ -213,6 +254,153 @@ module.exports = {
 
       ]).toArray()
       resolve(products)
+    })
+  },
+  fetchYearAndMonthSale: () => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let response = {}
+        let yearSale = await db.get().collection(ORDER_COLLECTION).aggregate([
+          {
+            $match: { status: "Delivered" }
+          },
+          {
+            $group:
+              { _id: { year: { $year: { $toDate: "$date" } } }, total: { $sum: '$totalAmount' } }
+          },
+          {
+            $sort: { "_id.year": -1 }
+          }
+        ]).toArray()
+        if (yearSale[0]) {
+          response.yearSale = yearSale[0].total
+        }
+
+        let monthSale = await db.get().collection(ORDER_COLLECTION).aggregate([
+          {
+            $match: { status: "Delivered" }
+          },
+          {
+            $group: { _id: { month: { $month: { $toDate: "$date" } } }, total: { $sum: '$totalAmount' } }
+          },
+          {
+            $sort: { "_id.month": -1 }
+          }
+        ]).toArray()
+        if (monthSale[0]) {
+          response.monthSale = monthSale[0].total
+        }
+        resolve(response)
+      } catch (e) {
+        console.log(e);
+        resolve({ status: false })
+      }
+    })
+  },
+  allCount: () => {
+    return new Promise(async (resolve, reject) => {
+      let totalPlacedOrders = await db.get().collection(ORDER_COLLECTION).count({ status: "Placed" });
+      let totalShippedOrders = await db.get().collection(ORDER_COLLECTION).count({ status: "Shipped" });
+      let totalCancelledOrders = await db.get().collection(ORDER_COLLECTION).count({ status: "Cancelled" });
+      let totalDeliveredOrders = await db.get().collection(ORDER_COLLECTION).count({ status: "Delivered" });
+      let totalReturnedOrders = await db.get().collection(ORDER_COLLECTION).count({ status: "Returned" });
+      let totalOrders = totalCancelledOrders + totalPlacedOrders + totalShippedOrders + totalDeliveredOrders + totalReturnedOrders
+
+      let orderStatusCount = {
+        totalPlacedOrders: totalPlacedOrders,
+        totalShippedOrders: totalShippedOrders,
+        totalCancelledOrders: totalCancelledOrders,
+        totalDeliveredOrders: totalDeliveredOrders,
+        totalReturnedOrders: totalReturnedOrders,
+        totalOrders: totalOrders
+      }
+
+      resolve(orderStatusCount)
+    })
+  },
+  fetchSales: () => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let sale = await db.get().collection(ORDER_COLLECTION).aggregate([
+          {
+            $match: { status: "Delivered" }
+          },
+          {
+            $group:
+              { _id: { month: { $month: { $toDate: "$date" } } }, total: { $sum: '$totalAmount' } }
+          },
+          {
+            $sort: { "_id.month": 1 }
+          },
+          {
+            $project: { _id: 0, total: 1 }
+          }
+        ]).toArray()
+        if (sale) {
+          resolve(sale)
+        } else {
+          resolve({ status: true })
+        }
+      } catch (e) {
+        console.log(e);
+        resolve({ status: false })
+      }
+    })
+  },
+  getUserCount: () => {
+    return new Promise(async (resolve, reject) => {
+      db.get().collection(USER_COLLECTION).countDocuments().then((data) => {
+        resolve(data);
+      })
+    })
+  },
+  fetchMonth: () => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let monthNumber = await db.get().collection(ORDER_COLLECTION).aggregate([
+          {
+            $match: { status: "Delivered" }
+          },
+          {
+            $group:
+              { _id: { month: { $month: { $toDate: "$date" } } } }
+          },
+          {
+            $sort: { "_id.month": 1 }
+          },
+          {
+            $project: { _id: 0, month: '$_id.month' }
+          }
+        ]).toArray()
+        monthNumber.forEach(element => {
+          function toMonthName(monthNumber) {
+            const date = new Date();
+            date.setMonth(monthNumber - 1);
+            return date.toLocaleString('en-US', {
+              month: 'long',
+            });
+          }
+          element.month = toMonthName(element.month)
+        });
+        resolve(monthNumber)
+      } catch (e) {
+        console.log(e);
+        resolve({ status: false })
+      }
+    })
+  },
+  getOrderCount: () => {
+    return new Promise((resolve, reject) => {
+      db.get().collection(ORDER_COLLECTION).countDocuments().then((data) => {
+        resolve(data)
+      })
+    })
+  },
+  getCustomOrdersList: () => {
+    return new Promise((resolve, reject) => {
+      db.get().collection(ORDER_COLLECTION).find({ status: 'Delivered' }).toArray().then((order) => {
+        resolve(order.reverse())
+      })
     })
   }
 

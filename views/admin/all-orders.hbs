@@ -2,7 +2,7 @@
   <h3 class="text-light mt-2 text-center font-weight-bold">Orders</h3>
 </div>
 
-
+<div class="container mt-5">
     {{#if statusChange}}
     <div class="container mt-5 ">
         <div class="alert alert-success" role="alert">
@@ -28,10 +28,16 @@
       <tr class="text-dark">
         <th class="text-dark" scope="row">{{inc @index}}</th>
         <th class="text-dark" scope="row">{{this.deliveryDetails.name}}</th>
-        <td class="text-dark">{{this.deliveryDetails.date}}</td>
+        <td class="text-dark">{{this.date}}</td>
         <td class="text-dark">{{this.totalAmount}}</td>
         <td class="text-dark">{{this.status}}</td>
         <td>
+          {{#if this.cancelled}}
+          <p class="text-danger">Order Cancelled</p>
+          {{else}}
+          {{#if this.delivered}}
+          <p class="text-success">Item Delivered</p>
+          {{else}}
           <form action="/admin/edit-order-status/{{this._id}}" method="post">
             <select name="deliveryStatus" id="deliveryStatus">
               <option value="{{this.status}}" selected hidden>{{this.status}}</option>
@@ -40,12 +46,26 @@
             </select>
             <input type="submit" value="change">
           </form>
+          {{/if}}
+          {{/if}}
         </td>
         <td>
           <a class="btn btn-info" href="/admin/order-details/{{this._id}}">View Details</a>
         </td>
         <td>
+          {{#if this.cancelled}}
+          <p class="text-danger">Order Cancelled</p>
+          {{else}}
+          {{#if this.delivered}}
+          {{#if this.returned}}
+          <p class="text-warning">Item returned</p>
+          {{else}}
+          <p class="text-success">Item Delivered</p>
+          {{/if}}
+          {{else}}
           <button onclick="cancelOrder('{{this._id}}')" class="btn btn-danger">Cancel</button>
+          {{/if}}
+          {{/if}}
         </td>
 
       </tr>
@@ -69,7 +89,9 @@
       success: (response) => {
         console.log(response);
         if (response.status) {
-          location.reload()
+          swal("Cancelled!", "This order is cancelled").then(()=>{
+            location.reload()
+          })
         }
       }
 

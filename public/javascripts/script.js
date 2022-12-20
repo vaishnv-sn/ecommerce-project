@@ -13,7 +13,6 @@ function addToCart(prodId) {
 }
 
 function addToWishlist(prodId) {
-    console.log('wishlist')
     $.ajax({
         url: '/add-to-wishlist/' + prodId,
         method: 'get',

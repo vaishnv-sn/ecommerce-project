@@ -19,7 +19,6 @@ router.route('/')
     }
     let categories = await userHelper.getCategories()
     let banners = await userHelper.getBanners()
-    console.log(categories);
     productHelper.getAllProducts().then((products) => {
       res.render('user/landingPage', { user: req.session.user, products, cartCount, banners, wishlistCount, categories });
     })
@@ -65,7 +64,7 @@ router.route('/login')
 /* -------------------------------------------------------------------------- */
 router.route('/signup')
   .get(function (req, res) {
-    res.render('user/signup', { emailErr: req.session.emailErr });
+    res.render('user/signup');
     req.session.emailErr = null;
   })
   .post(function (req, res) {
@@ -73,9 +72,6 @@ router.route('/signup')
     doSignup(req.body).then((status) => {
       req.session.signupSuccess = status.status
       res.redirect('/login');
-    }).catch((err) => {
-      req.session.emailErr = err.status
-      res.redirect('/signup')
     })
   })
 
@@ -209,7 +205,7 @@ router.route('/place-order')
 
     if (req.body.paymentMethod === 'wallet') {
       if (walletAmt > total) {
-        userHelper.placeWalletOrder(req.body, req.session.user._id, products, total, walletAmt).then(() => {
+        userHelper.placeWalletOrder(req.body, req.session.user._id, products, total).then(() => {
           res.json({ walletSuccess: true })
         })
       } else {
@@ -275,6 +271,7 @@ router.route('/order-placed')
 
 router.route('/cancel-order')
   .post(verifyLogin, (req, res) => {
+    console.log(req.body)
     userHelper.cancelOrder(req.body.orderId).then(() => {
       res.json({ status: true })
     })
@@ -366,9 +363,35 @@ router.route('/get-category-products/:id')
     })
   })
 
+router.route('/email-check')
+  .post((req, res) => {
+    userHelper.emailCheck(req.body.email).then(() => {
+      res.json({ status: true })
+    }).catch(() => {
+      res.json({ status: false })
+    })
+  })
+
+router.route('/phone-check')
+  .post((req, res) => {
+    userHelper.phoneCheck(req.body.phone).then(() => {
+      res.json({ status: true })
+    }).catch(() => {
+      res.json({ status: false })
+    })
+  })
+
+router.route('/return-order/:id')
+  .get(verifyLogin, (req, res) => {
+    console.log(req.params.id);
+    userHelper.returnOrder(req.params.id).then(() => {
+      res.redirect('/orders')
+    })
+  })
+
 router.route('/sample')
   .get((req, res) => {
-    res.render('user/imgCrop')
+    res.render('user/sample')
   })
   .post((req, res) => {
     console.log(req.body);

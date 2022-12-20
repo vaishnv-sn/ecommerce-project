@@ -39,9 +39,6 @@
                                     onclick="return confirm('Are you sure to delete the category {{this.category}}?')"
                                     class="btn btn-dark">Delete</a>
                             </td>
-                            {{!-- <td>
-                                <a href="/admin/edit-category/{{this._id}}" class="btn btn-dark">Edit</a>
-                            </td> --}}
                         </tr>
                         {{/each}}
                     </tbody>
@@ -49,17 +46,56 @@
             </div>
         </div>
         <div class="col-md-4 mt-5">
-            <form action="/admin/categories" class="mt-5" method="post">
-                <label class="font-weight-bold" for="category">Add category</label>
-                <input type="text" name="category" class="form-control" id="category">
+            <form action="/admin/categories" class="mt-5" id="categoryForm" method="post">
+                <div>
+                    <label class="font-weight-bold" for="category">Add category</label>
+                    <input type="text" name="category" class="form-control" id="category" onclick="categoryCheck()" onchange="categoryCheck()" onkeyup="categoryCheck()">
+                    <span class="text-danger" id="category-error"></span>
+                </div>
                 <button type="submit" class="btn btn-success mt-4 ">Submit</button>
             </form>
         </div>
     </div>
 </div>
 
+<script>
+    const category = document.getElementById('category');
+    const categoryErr = document.getElementById('category-error');
+    const form = document.getElementById('categoryForm');
+    function categoryCheck(){
+        if (category.value.trim().length > 4) {
+            category.style.border = "1px solid green";
+            categoryErr.innerHTML = ""
+        return true;
+        } else {
+        category.style.border = "1px solid red";
+        categoryErr.innerHTML = "Atleast 5 letters"
+        return false;
+        }
+    }
+    form.addEventListener('submit', (e)=>{
+        e.preventDefault();
+        categoryCheck();
+        if(categoryCheck()){
+            form.submit();
+        }
+    })
+</script>
 
-
+<style>
+    input:focus, input.form-control:focus {
+        outline:none !important;
+        outline-width: 0 !important;
+        box-shadow: none;
+        -moz-box-shadow: none;
+        -webkit-box-shadow: none;
+	}
+	input::-webkit-outer-spin-button,
+	input::-webkit-inner-spin-button {
+  	    -webkit-appearance: none;
+  	    margin: 0;
+    }
+</style>
 
 <script>
     $(document).ready(function () { $('#userTable').DataTable(); });

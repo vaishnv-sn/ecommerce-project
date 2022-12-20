@@ -34,9 +34,6 @@
                         </td>
                         {{/each}}
                     </tr>
-                    {{!-- {{#each single}}
-                    <td>{{this}}</td>
-                    {{/each}} --}}
                 </tbody>
             </table>
         </div>
@@ -90,7 +87,6 @@
 {{/if}}
 <script>
     function changeQuantity(cartId, prodId, userId, count) {
-        console.log(userId)
         let quantity = parseInt(document.getElementById(prodId).innerHTML)
         count = parseInt(count)
 
@@ -105,8 +101,6 @@
             method: 'post',
             success: (response) => {
                 if (response.removeProduct) {
-                    //alert('Product removed from cart!!')
-                    //location.reload()
                     swal("Success!", "Product removed from cart", "success").then(() => {
                         location.reload();
                     })
@@ -117,6 +111,7 @@
             }
         })
     }
+
     function deleteProduct(cartId, proId) {
         console.log("delete from cart");
         swal({
@@ -126,7 +121,7 @@
             buttons: true,
             dangerMode: true,
         })
-            .then((willDelete) => {
+        .then((willDelete) => {
                 if (willDelete) {
                     $.ajax({
                         url: "/remove-cartItem",
@@ -138,7 +133,6 @@
                         success: (response) => {
                             console.log(response)
                             if (response) {
-                                //alert("Product Removed from cart")
                                 swal("Success!", "Product removed from cart", "success").then(() => {
                                     location.reload();
                                 })
@@ -147,22 +141,6 @@
                         },
                     })
                 }
-            });
+            });   
     }
-    //function deleteProduct(cartId, prodId) {
-    //    console.log(cartId, prodId)
-    //    $.ajax({
-    //        url: '/remove-cartItem',
-    //        data: {
-    //        cartId: cartId,
-    //        prodId: prodId
-    //        },
-    //        method: 'post',
-    //        success: (response) => {
-    //            if (response) {
-    //                alert('Item removed!!')
-    //            }
-    //        }
-    //    })
-    //}
 </script>

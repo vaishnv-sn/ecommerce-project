@@ -21,17 +21,61 @@ module.exports = {
   /* -------------------------------------------------------------------------- */
 
   doSignup: (userData) => {
-    console.log(userData.referral);
     return new Promise(async (resolve, reject) => {
-      let user = await db.get().collection(USER_COLLECTION).findOne({ number: userData.number })
 
-      if (user) {
-
-        reject({ status: "User with same phone number already exists" })
+      if (userData.referral === "") {
+        userData.wallet = 0;
+        userData.blocked = false;
+        userData.password = await bcrypt.hash(userData.password, 10)
+        userData.walletHistory = []
+        userData.referral = Math.floor((Math.random() * 100000000) + 12345)
+        console.log(userData);
+        db.get().collection(USER_COLLECTION).insertOne(userData).then(() => {
+          resolve({ status: "User Created Successfully without referral code!!" })
+        })
 
       } else {
 
-        if (userData.referral === "") {
+        let referralCheck = await db.get().collection(USER_COLLECTION).findOne({ referral: parseInt(userData.referral) })
+        if (referralCheck) {
+
+          let today = new Date();
+          let dd = String(today.getDate()).padStart(2, '0');
+          let yyyy = today.getFullYear();
+          let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+          today = dd + '/' + mm + '/' + yyyy;
+
+          await db.get().collection(USER_COLLECTION).updateOne({ referral: parseInt(userData.referral) },
+            {
+              $set: {
+                wallet: referralCheck.wallet + 100
+              },
+              $push: {
+                walletHistory: {
+                  date: today,
+                  message: userData.fname + " joined with your referral code.",
+                  amount: 100
+                }
+              }
+            }
+          )
+          userData.wallet = 100;
+          userData.blocked = false;
+          userData.password = await bcrypt.hash(userData.password, 10);
+          userData.walletHistory = [
+            {
+              date: today,
+              message: "Reward for joining with the referral code of " + referralCheck.fname,
+              amount: 100
+            }
+          ];
+          userData.referral = Math.floor((Math.random() * 100000000) + 12345);
+          db.get().collection(USER_COLLECTION).insertOne(userData).then(() => {
+            resolve({ status: "User Created Successfully, referral reward added to your wallet!!" })
+          })
+
+        } else {
+
           userData.wallet = 0;
           userData.blocked = false;
           userData.password = await bcrypt.hash(userData.password, 10)
@@ -39,62 +83,8 @@ module.exports = {
           userData.referral = Math.floor((Math.random() * 100000000) + 12345)
           console.log(userData);
           db.get().collection(USER_COLLECTION).insertOne(userData).then(() => {
-            resolve({ status: "User Created Successfully!!" })
+            resolve({ status: "Invalid referral number, user Created Successfully!!" })
           })
-
-        } else {
-
-          let referralCheck = await db.get().collection(USER_COLLECTION).findOne({ referral: parseInt(userData.referral) })
-          if (referralCheck) {
-
-            let today = new Date();
-            let dd = String(today.getDate()).padStart(2, '0');
-            let yyyy = today.getFullYear();
-            let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
-            today = dd + '/' + mm + '/' + yyyy;
-
-            await db.get().collection(USER_COLLECTION).updateOne({ referral: parseInt(userData.referral) },
-              {
-                $set: {
-                  wallet: referralCheck.wallet + 100
-                },
-                $push: {
-                  walletHistory: {
-                    date: today,
-                    message: userData.fname + " joined with your referral code.",
-                    amount: 100
-                  }
-                }
-              }
-            )
-            userData.wallet = 100;
-            userData.blocked = false;
-            userData.password = await bcrypt.hash(userData.password, 10);
-            userData.walletHistory = [
-              {
-                date: today,
-                message: "Reward for joining with the referral code of " + referralCheck.fname,
-                amount: 100
-              }
-            ];
-            userData.referral = Math.floor((Math.random() * 100000000) + 12345);
-            db.get().collection(USER_COLLECTION).insertOne(userData).then(() => {
-              resolve({ status: "User Created Successfully!!" })
-            })
-
-          } else {
-
-            userData.wallet = 0;
-            userData.blocked = false;
-            userData.password = await bcrypt.hash(userData.password, 10)
-            userData.walletHistory = []
-            userData.referral = Math.floor((Math.random() * 100000000) + 12345)
-            console.log(userData);
-            db.get().collection(USER_COLLECTION).insertOne(userData).then(() => {
-              resolve({ status: "User Created Successfully!!" })
-            })
-
-          }
         }
       }
     })
@@ -398,8 +388,7 @@ module.exports = {
       let dd = String(today.getDate()).padStart(2, '0');
       let yyyy = today.getFullYear();
       let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
-      today = dd + '/' + mm + '/' + yyyy;
-
+      today = dd + '-' + mm + '-' + yyyy;
       let orderObj = {
         deliveryDetails: {
           name: deliveryAddress.name,
@@ -407,13 +396,14 @@ module.exports = {
           address: deliveryAddress.address,
           locality: deliveryAddress.locality,
           pincode: deliveryAddress.pincode,
-          date: today
         },
         userId: objectId(userId),
         products: products,
         totalAmount: total,
         paymentMethod: orderDetails.paymentMethod,
-        status: status
+        status: status,
+        date: today,
+        cancelled: false
       }
 
       db.get().collection(ORDER_COLLECTION).insertOne(orderObj)
@@ -434,7 +424,7 @@ module.exports = {
   getUserOrders: (userId) => {
     return new Promise(async (resolve, reject) => {
       let orders = await db.get().collection(ORDER_COLLECTION).find({ userId: objectId(userId) }).toArray()
-      resolve(orders)
+      resolve(orders.reverse())
     })
   },
 
@@ -481,20 +471,46 @@ module.exports = {
   },
 
   cancelOrder: (orderId) => {
-    // console.log(orderId);
     return new Promise(async (resolve, reject) => {
-      await db.get().collection(ORDER_COLLECTION).updateOne(
+      await db.get().collection(ORDER_COLLECTION).findOneAndUpdate(
         {
           _id: objectId(orderId)
         },
         {
           $set: {
-            status: 'Cancelled'
+            status: 'Cancelled',
+            cancelled: true
           }
         }
-      )
-    }).then(() => {
-      resolve()
+      ).then((data) => {
+        if (data.value.paymentMethod != "COD") {
+          data = data.value
+
+          let amount = data.totalAmount
+          db.get().collection(USER_COLLECTION).updateOne(
+            {
+              _id: objectId(data.userId)
+            },
+            {
+              $inc: {
+                wallet: amount
+              },
+              $push: {
+                walletHistory: {
+                  date: data.date,
+                  message: "Order cancelled, Refund Initialized",
+                  amount: amount,
+                  orderId: orderId
+                }
+              }
+            }
+          ).then(() => {
+            resolve()
+          })
+        } else {
+          resolve()
+        }
+      })
     })
   },
 
@@ -689,11 +705,13 @@ module.exports = {
       let response = {}
 
       await db.get().collection(USER_COLLECTION).findOne({ _id: objectId(userId) }).then(async (data) => {
+        //we can turn a number to string by just attaching empty quotation marks
         currentPassword = '' + currentPassword;
         bcryptpass = await bcrypt.hash(currentPassword, 10);
 
         bcrypt.compare(currentPassword, data.password).then(async (status) => {
           if (status) {
+            //we can turn a number to string by just attaching empty quotation marks
             newpassword = '' + newpassword
             bcryptNewPass = await bcrypt.hash(newpassword, 10)
 
@@ -774,39 +792,10 @@ module.exports = {
     })
   },
 
-  createOrderObj: (orderAddress, products, total) => {
-    return new Promise(async (resolve, reject) => {
-      let today = new Date();
-      let dd = String(today.getDate()).padStart(2, '0');
-      let yyyy = today.getFullYear();
-      let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
-      today = dd + '/' + mm + '/' + yyyy;
-      console.log(today);
-
-      orderObj = {
-        deliveryDetails: {
-          name: orderAddress.name,
-          mobile: orderAddress.contactNumber,
-          address: orderAddress.address,
-          locality: orderAddress.locality,
-          pincode: orderAddress.pincode,
-          date: today
-        },
-        userId: objectId(orderAddress.userId),
-        products: products,
-        totalAmount: total
-      }
-      await db.get().collection(ORDER_COLLECTION).insertOne(orderObj).then((data) => {
-        resolve(data)
-      })
-    })
-  },
-
   getWalletHistory: (userId) => {
     return new Promise((resolve, reject) => {
       db.get().collection(USER_COLLECTION).findOne({ _id: objectId(userId) }).then((data) => {
-        console.log(data);
-        resolve(data.walletHistory)
+        resolve(data.walletHistory.reverse())
       })
     })
   },
@@ -831,9 +820,9 @@ module.exports = {
     })
   },
 
-  placeWalletOrder: (orderDetails, userId, products, total, walletAmt) => {
+  placeWalletOrder: (orderDetails, userId, products, total) => {
     return new Promise(async (resolve, reject) => {
-      let status = orderDetails.paymentMethod = "Placed"
+      let status = "Placed"
       let deliveryAddress = await db.get().collection(USER_COLLECTION).findOne(
         { _id: objectId(userId) },
         {
@@ -850,8 +839,7 @@ module.exports = {
       let dd = String(today.getDate()).padStart(2, '0');
       let yyyy = today.getFullYear();
       let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
-      today = dd + '/' + mm + '/' + yyyy;
-
+      today = dd + '-' + mm + '-' + yyyy;
       let orderObj = {
         deliveryDetails: {
           name: deliveryAddress.name,
@@ -859,13 +847,14 @@ module.exports = {
           address: deliveryAddress.address,
           locality: deliveryAddress.locality,
           pincode: deliveryAddress.pincode,
-          date: today
         },
         userId: objectId(userId),
         products: products,
         totalAmount: total,
         paymentMethod: orderDetails.paymentMethod,
-        status: status
+        status: status,
+        date: today,
+        cancelled: false
       }
 
       db.get().collection(ORDER_COLLECTION).insertOne(orderObj)
@@ -894,48 +883,44 @@ module.exports = {
           resolve();
         })
     })
-  }
-}
-
-/* let status = orderDetails.paymentMethod === 'COD' ? 'Placed' : 'Pending';
-
-let deliveryAddress = await db.get().collection(USER_COLLECTION).findOne(
-  { _id: objectId(userId) },
-  {
-    projection: {
-      _id: 0,
-      address: { $elemMatch: { id: orderDetails.address } }
-    }
-  }
-)
-deliveryAddress = deliveryAddress.address[0]
-
-let today = new Date();
-let dd = String(today.getDate()).padStart(2, '0');
-let yyyy = today.getFullYear();
-let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
-today = dd + '/' + mm + '/' + yyyy;
-
-let orderObj = {
-  deliveryDetails: {
-    name: deliveryAddress.name,
-    mobile: deliveryAddress.contactNumber,
-    address: deliveryAddress.address,
-    locality: deliveryAddress.locality,
-    pincode: deliveryAddress.pincode,
-    date: today
   },
-  userId: objectId(userId),
-  products: products,
-  totalAmount: total,
-  paymentMethod: orderDetails.paymentMethod,
-  status: status
+  emailCheck: (email) => {
+    return new Promise(async (resolve, reject) => {
+      let userExists = await db.get().collection(USER_COLLECTION).find({ email: email }).toArray()
+      if (!userExists[0]) {
+        resolve();
+      } else {
+        reject();
+      }
+    })
+  },
+  phoneCheck: (phone) => {
+    return new Promise(async (resolve, reject) => {
+      let userExists = await db.get().collection(USER_COLLECTION).find({ number: '' + phone }).toArray()
+      console.log(userExists);
+      if (!userExists[0]) {
+        resolve();
+      } else {
+        reject();
+      }
+    })
+  },
+  returnOrder: (orderId) => {
+    return new Promise((resolve, reject) => {
+      db.get().collection(ORDER_COLLECTION).updateOne(
+        {
+          _id: objectId(orderId)
+        },
+        {
+          $set: {
+            status: 'Returned',
+            returned: true,
+            delivered: false
+          }
+        }
+      ).then(() => {
+        resolve()
+      })
+    })
+  }
 }
-
-  db.get().collection(ORDER_COLLECTION).insertOne(orderObj)
-  .then((data) => {
-    console.log(data);
-    db.get().collection(CART_COLLECTION).deleteOne({ user: objectId(userId) });
-    resolve(data.insertedId);
-  })
-    }) */
