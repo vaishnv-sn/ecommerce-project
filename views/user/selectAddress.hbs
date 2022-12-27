@@ -7,9 +7,6 @@
 </style>
 
 <div class="addresscards">
-    <div class="col">
-        <h2>Select Delivery Address</h2>
-    </div>
 
     {{#if walletErr}}
     <div class="mt-3">
@@ -18,85 +15,146 @@
         </div>
     </div>
     {{/if}}
-
-    <div class=" m-0 row ">
-
-        <div class="container m-5">
-            <a href="/address-form" class="btn btn-primary btn-lg">Add New Address</a>
-        </div>
-        {{#each addresses}}
-        <div class="col-md-4">
-            <div class="card my-4 ml-2 shadow-3" style="border-radius:19px;">
-                <div class="form-check">
-                    <button class="btn btn-danger m-0 " title="Delete Address" onclick=" removeAddress('{{this.id}}')"
-                        type="submit" style="font-size:x-small;"><i class="fa-solid fa-trash-can"></i>
-                        x
-                    </button>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card-header py-3">
+                    <h5 class="mb-0 text-center">Select saved address</h5>
                 </div>
-                <div class="card-body  p-md-5 text-black">
-                    <h3 class="mb-4 text-uppercase">Delivery Info</h3>
-                    <p class="capitalize">Name: {{this.name}}</p>
-                    <strong>ADDRESS</strong>
-                    <p class="m-0">{{this.address}}</p>
-                    <p class="m-0">{{this.locality}}</p>
-                    <p class="m-0">ZIP CODE: {{this.pincode}}</p>
-                    <p class="m-0">Contact no: {{this.contactNumber}}</p>
-                    <form id="addressForm">
-                        <div class="m-2 rounded bg-info d-flex justify-content-center align-items-center p-2">
-                            <input type="radio" name="address" id="address1" value="{{this.id}}" required>
-                            <label for="address1" class="text-light mt-2 ml-1 font-weight-bold">Select this
-                                address</label>
+                {{#each addresses}}
+                <div class="card my-4 shadow-3 block" style="border-radius:20px; display:inline-block">
+                    <div class="form-check">
+                        <button class="btn btn-danger m-0 " title="Delete Address" onclick=" removeAddress('{{this.id}}')"
+                            type="submit" style="font-size:x-small;"><i class="fa-solid fa-trash-can"></i>
+                            x
+                        </button>
+                    </div>
+                    <div class="card-body  p-md-5 text-black">
+                        <h3 class="mb-4 text-uppercase">Delivery Info</h3>
+                        <p class="capitalize">Name: {{this.name}}</p>
+                        <strong>ADDRESS</strong>
+                        <p class="m-0">{{this.locality}}</p>
+                        <p class="m-0">ZIP CODE: {{this.pincode}}</p>
+                        <p class="m-0">Contact no: {{this.contactNumber}}</p>
+                        <button class="my-2 btn btn-primary" onclick="selectAddress('{{this.name}}', '{{this.contactNumber}}', '{{this.email}}', '{{this.locality}}', '{{this.pincode}}', '{{this.id}}')">
+                            Select Address
+                        </button>
+                    </div>
+                </div>
+                {{/each }}
+            </div>
+            <div class="col-md-4 my-4 " >
+                <div class="card mb-4 " >
+                    <div class="card-header py-3">
+                        <h5 class="mb-0">Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 pb-0">
+                                Products
+                                <span>₹{{cartTotal}}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                Shipping
+                                <span>Free</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 mb-3">
+                                <div>
+                                    <strong>Total amount</strong>
+                                </div>
+                                <span><strong>₹{{cartTotal}}</strong></span>
+                            </li>
+                        </ul>
+                        <div class="my-3">
+                            <form id="couponForm">
+                                <div>
+                                    <label for="couponCode">Enter Coupon Code:</label>
+                                    <input type="text" class="form-control" placeholder="APPLY COUPONS" id="couponCode" name="couponCode">
+                                    {{#if status}}
+                                    <p class="text-success">{{status}}</p>
+                                    {{/if}}
+                                    {{#if couponErr}}
+                                    <p class="text-danger">{{couponErr}}</p>
+                                    {{/if}}
+                                </div>
+                                <input type="submit" value="Apply" class="btn btn-warning mt-1">
+                            </form>
                         </div>
+                    </div>
                 </div>
             </div>
         </div>
-        {{/each }}
     </div>
 </div>
 
-
-
-<div class="col-md-12 mb-4">
-    <div class="card mb-4 ">
-        <div class="card-header py-3">
-            <h5 class="mb-0">Summary</h5>
-        </div>
-        <div class="card-body">
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 pb-0">
-                    Products
-                    <span>₹{{cartTotal}}</span>
-                </li>
-                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                    Shipping
-                    <span>Free</span>
-                </li>
-                <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 mb-3">
-                    <div>
-                        <strong>Total amount</strong>
-                    </div>
-                    <span><strong>₹{{cartTotal}}</strong></span>
-                </li>
-            </ul>
-            <h4>Select Payment Method</h4>
-            <div class="m-3">
-                <input type="radio" name="paymentMethod" value="COD" id="cod" required>
-                <label for="cod" class="text-dark"> Cash on delivery</label>
-                <br>
-
-                <input type="radio" name="paymentMethod" value="razorpay" id="razorpay" required>
-                <label for="razorpay" class="text-dark">Razorpay</label>
-                <br>
-
-                <input type="radio" name="paymentMethod" value="wallet" id="wallet" required>
-                <label for="wallet" class="text-dark">Wallet</label>
-                <br>
-            </div>
-
-            <input type="submit" class="btn btn-primary btn-block btn-lg" value="Make purchase">
-            </form>
-        </div>
+<div class="mx-2 col-md-8">
+    <div class="card-header py-3">
+        <h5 class="mb-0 text-center"> Or Enter A New Address</h5>
     </div>
+    <form id="addressForm">
+            
+        {{!-- Name input --}}
+        <div class="form-outline mb-4">
+            <label class="form-label" for="name">Name</label>
+            <input type="tel" id="name" name="name" placeholder="Enter your full name"
+                class="form-control" required />
+        </div>
+
+        <!-- Number input -->
+        <div class="form-outline mb-4">
+            <label class="form-label" for="contactNumber">Contact Number</label>
+            <input type="tel" id="contactNumber" name="contactNumber"
+                placeholder="Enter your 10 digit mobile number" class="form-control" required />
+        </div>
+
+        <!-- Email input -->
+        <div class="form-outline mb-4">
+            <label class="form-label" for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="Enter your Email Id"
+                class="form-control" required />
+        </div>
+
+        {{!-- Locality input --}}
+        <div class="form-outline mb-4">
+            <label class="form-label" for="locality">Locality</label>
+            <input type="text" id="locality" name="locality" placeholder="Enter your locality"
+                class="form-control" required />
+        </div>
+
+        {{!-- Pincode input --}}
+        <div class="form-outline mb-4">
+            <label class="form-label" for="pincode">Pincode</label>
+            <input type="text" id="pincode" name="pincode" placeholder="Enter your pincode"
+                class="form-control" required />
+        </div>
+
+        <div class="my-1">
+            <input type="checkbox" name="saveAddress" id="saveAddress">
+            <label for="saveAddress">Save this address</label>
+        </div>
+
+        {{!-- address Id --}}
+        <input type="text" name="addressId" id="addressId" hidden>
+
+        <hr>
+
+        <h4>Select Payment Method</h4>
+        <div>
+            <input type="radio" name="paymentMethod" value="COD" id="cod" required>
+            <label for="cod" class="text-dark"> Cash on delivery</label>
+        </div>
+        <div>
+            <input type="radio" name="paymentMethod" value="razorpay" id="razorpay" required>
+            <label for="razorpay" class="text-dark">Razorpay</label>
+        </div>
+        <div>
+            <input type="radio" name="paymentMethod" value="wallet" id="wallet" required>
+            <label for="wallet" class="text-dark">Wallet</label>
+        </div>
+
+            
+        <input type="submit" class="btn btn-primary btn-lg mt-2" value="Make purchase">
+    </form>
 </div>
 
 
@@ -104,6 +162,31 @@
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <script>
+    let couponForm = document.getElementById('couponForm')
+    couponForm.addEventListener('submit', (e)=>{
+        console.log(e)
+        e.preventDefault()
+        let couponName = document.getElementById('couponForm').elements.couponCode.value
+        $.ajax({
+            url: '/apply-coupon',
+            data: {couponName:couponName},
+            method: 'post',
+            success:(status)=>{
+                location.reload()
+            }
+        })
+    })
+
+    function selectAddress(name, number, email, locality, pincode, addressId){
+        document.getElementById('name').value = name
+        document.getElementById('contactNumber').value = number
+        document.getElementById('email').value = email
+        document.getElementById('locality').value = locality
+        document.getElementById('pincode').value = pincode
+        document.getElementById('addressId').value = addressId
+
+    }
+
     function removeAddress(addressId) {
         swal({
             title: "Are you sure?",
@@ -209,6 +292,5 @@
 
         })
     }
-
 
 </script>

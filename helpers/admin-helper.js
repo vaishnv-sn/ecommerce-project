@@ -1,5 +1,5 @@
 var db = require('../config/connection')
-const { USER_COLLECTION, ADMIN_COLLECTION, ORDER_COLLECTION, BANNER_COLLECTION, PRODUCT_COLLECTION } = require('../config/collections');
+const { USER_COLLECTION, ADMIN_COLLECTION, ORDER_COLLECTION, COUPON_COLLECTION, BANNER_COLLECTION, PRODUCT_COLLECTION } = require('../config/collections');
 var objectId = require('mongodb').ObjectId
 const bcrypt = require('bcrypt');
 
@@ -400,6 +400,28 @@ module.exports = {
     return new Promise((resolve, reject) => {
       db.get().collection(ORDER_COLLECTION).find({ status: 'Delivered' }).toArray().then((order) => {
         resolve(order.reverse())
+      })
+    })
+  },
+  getCoupons: () => {
+    return new Promise((resolve, reject) => {
+      db.get().collection(COUPON_COLLECTION).find().toArray().then((data) => {
+        resolve(data)
+      })
+    })
+  },
+  addCoupons: (couponDetails) => {
+    return new Promise((resolve, reject) => {
+      db.get().collection(COUPON_COLLECTION).insertOne(couponDetails).then((data) => {
+        console.log(data);
+        resolve()
+      })
+    })
+  },
+  removeCoupon: (couponId) => {
+    return new Promise((resolve, reject) => {
+      db.get().collection(COUPON_COLLECTION).deleteOne({ _id: objectId(couponId) }).then(() => {
+        resolve()
       })
     })
   }

@@ -1,0 +1,132 @@
+<section class="admin-section bg-white">
+    <div class="container" style="min-height: 100vh;">
+        <div class="row ">
+            <div class="col-xs-12 col-sm-12 col-md-12 d-flex justify-content-center shadow-lg bg-white">
+             <form id="createNewCoupon" >
+            <h2 class="text-center mb-4 mt-2">Create Coupon</h2>
+            <div class="row d-flex justify-content-around">
+                <div class="col-5 mb-4">
+                    <div class="form-group ">
+                        <label for="coupon">Coupon code :</label>
+                        <input type="text" class="form-control" name="couponName" id="coupon" placeholder="" required>
+                         <p class="text-danger fs-bold" id="couponErr"></p>
+                    </div>
+                </div>
+                <div class="col-5 mb-4">
+                    <div class="form-group">
+                        <label for="description">Description:</label>
+                        <textarea class="form-control" name="description" id="description" required rows="3" cols="50"></textarea>
+
+                        {{!-- <input type="text" class="form-control" name="description" id="description" required> --}}
+                    </div>
+                </div>
+                <div class="col-5 mb-4">
+                    <div class="minAmount">
+                        <label for="price">Min amount:</label>
+                        <input type="number" class="form-control" name="minAmount" id="minAmount" placeholder="" required>
+                    </div>
+                </div>
+                <div class="col-5 mb-4">
+                    <div class="percentage">
+                        <label for="price">Percentage:</label>
+                        <input type="number" class="form-control" name="percentage" id="percentage" placeholder="" required>
+                    </div>
+                </div>
+                <div class="col-5 mb-4">
+                    <div class="percentage">
+                        <label for="price">Max Discount:</label>
+                        <input type="number" class="form-control" name="maxDiscount" id="maxDiscount" placeholder="" required>
+                    </div>
+                </div>
+             
+                <div class="col-12 d-flex justify-content-center mb-4">
+                    <button type="submit" class="btn btn-success mt-2 col-md-12  mb-4" id="">Create</button>
+                </div>  
+            </div>
+            </form>
+        </div>
+        <div class="col-xs-12 col-sm-12 col-md-12 d-flex justify-content-center shadow-lg mt-5">
+            
+              <div class="table-responsive bg-white w-75">
+                <h2 class="text-center">Coupons</h2>
+                  <table class="table bg-white shadow-lg mt-3 fw-bold" id="userslist"> 
+                    <thead>
+                      <tr>
+                        <th>S.no</th>
+                        <th scope="col" >Coupon</th>
+                        <th scope="col" >Description</th>
+                        <th scope="col" class="col-2">Min amount</th>
+                        <th scope="col" class="col-1">Percentage</th>
+                        <th scope="col" class="col-1">Max Discount</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {{#each coupon}}
+                      <tr>
+                        <td id="slNo"></td>
+                        <td><span>{{couponName}}</span></td>
+                        <td>{{this.description}}</td>
+                        <td>{{this.minAmount}}</td>
+                        <td>{{this.percentage}}</td>
+                        <td>{{this.maxDiscount}}</td>
+                        <td ><button class="btn" onclick="removeCoupon('{{this._id}}','{{this.couponName}}')"><i class="fa fa-trash" aria-hidden="true"></i></button></td>
+                      </tr>
+                      {{/each}}
+                    </tbody>
+                  </table>
+                  </div>
+        </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    var divs = document.querySelectorAll('#slNo');
+    for (var i = 0; i < divs.length; ++i) {
+        divs[i].innerHTML = i + 1;
+    }
+
+    $("#createNewCoupon").submit((e)=>{
+        e.preventDefault()
+         $.ajax({
+          url:'/admin/coupons',
+          data:$('#createNewCoupon').serialize(),
+          method:'post',
+          success:(response)=>{
+            console.log(response)
+            if(response.couponExist){
+                document.getElementById("couponErr").innerHTML="Coupon already exist!"
+            }else{
+                location.reload()
+            }
+          }
+        })
+    })
+
+    function removeCoupon(couponId,couponName){
+        swal({
+            title: "Are you sure?",
+            text: "You're deleting " +couponName,
+            icon: "info",
+            buttons: true,
+            dangerMode: true,
+            })
+            .then((willDelete) => {
+            if (willDelete) {
+                $.ajax({
+                url:'/admin/remove-coupon',
+                data:{
+                    coupon:couponId
+                },
+                method:'post',
+                success:(response)=>{
+                location.reload()
+                }
+            })
+            }
+        });
+    }
+
+
+</script>

@@ -285,6 +285,27 @@ router.route('/sales-report')
     });
   })
 
+router.route('/coupons')
+  .get(adminRouteProtection, (req, res) => {
+    adminHelper.getCoupons().then((coupon) => {
+      res.render('admin/coupon', { admin: req.session.admin, coupon })
+    })
+  })
+  .post(adminRouteProtection, (req, res) => {
+    console.log(req.body);
+    adminHelper.addCoupons(req.body).then(() => {
+      res.json({ status: true })
+    })
+  })
+
+router.route('/remove-coupon')
+  .post((req, res) => {
+    console.log(req.body);
+    adminHelper.removeCoupon(req.body.coupon).then(() => {
+      res.json({ status: true })
+    })
+  })
+
 
 
 module.exports = router;

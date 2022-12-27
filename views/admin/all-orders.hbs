@@ -57,11 +57,7 @@
           <p class="text-danger">Order Cancelled</p>
           {{else}}
           {{#if this.delivered}}
-          {{#if this.returned}}
-          <p class="text-warning">Item returned</p>
-          {{else}}
           <p class="text-success">Item Delivered</p>
-          {{/if}}
           {{else}}
           <button onclick="cancelOrder('{{this._id}}')" class="btn btn-danger">Cancel</button>
           {{/if}}

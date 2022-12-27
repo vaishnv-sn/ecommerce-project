@@ -68,7 +68,6 @@ router.route('/signup')
     req.session.emailErr = null;
   })
   .post(function (req, res) {
-    console.log(req.body);
     doSignup(req.body).then((status) => {
       req.session.signupSuccess = status.status
       res.redirect('/login');
@@ -109,7 +108,6 @@ router.route('/phone-page')
   })
   .post((req, res) => {
     req.session.otpNumber = req.body.phone
-    // console.log(req.body);
     let signupData;
     userHelper.doOTP(req.body).then((response) => {
       if (response.status) {
@@ -134,16 +132,12 @@ router.route('/otp-page')
   })
   .post((req, res) => {
     let number = req.session.otpNumber
-    // console.log(number + 'success');
-    // console.log(req.body);
     userHelper.doOTPconfirm(req.body, number).then((response) => {
       if (response.status) {
         userHelper.getUser(number).then((user) => {
-          // console.log(user);
           if (!user.blocked) {
             req.session.user = user;
             req.session.userLoggedIn = true;
-            // console.log(req.session.user);
             res.redirect('/')
           } else {
             req.session.blockedErr = "You can't access this site at this moment"
@@ -168,7 +162,6 @@ router.route('/cart')
     let single = cartProducts.map((item) => {
       return item.quantity * item.product.pro_price
     })
-    console.log(single);
     res.render('user/cart', { user: req.session.user, cartProducts, cartTotal, single });
   })
 
@@ -181,9 +174,7 @@ router.route('/add-to-cart/:id')
 
 router.route('/change-product-quantity')
   .post(verifyLogin, (req, res) => {
-    // console.log(req.body);
     userHelper.changeProductQuantity(req.body).then(async (response) => {
-      // response.cartTotal = await userHelper.getTotalCartAmount(req.body.user);
       res.json(response)
     })
   })
@@ -191,21 +182,52 @@ router.route('/change-product-quantity')
 router.route('/place-order')
   .get(verifyLogin, async (req, res) => {
     let cartTotal = await userHelper.getTotalCartAmount(req.session.user._id);
+    let coupon = req.session.coupon
+    let couponErr = req.session.couponErr
+    let status
+    if (coupon) {
+      let minAmount = coupon.minAmount
+      let maxDiscount = coupon.maxDiscount
+      let discountPercentage = coupon.discountPercentage
+      if (cartTotal >= minAmount) {
+        let discount = cartTotal * (discountPercentage / 100)
+        discount = Math.round(discount)
+        if (discount > maxDiscount) {
+          discount = maxDiscount
+          status = 'Maximum discound ' + discount + ' applied!!'
+          cartTotal = cartTotal - discount
+        } else {
+          status = 'Discounted amount' + discount + '!!'
+          cartTotal = cartTotal - discount
+        }
+      } else {
+        status = 'Purchase for minimum' + minAmount + 'to use this coupon!!'
+      }
+    }
+    req.session.newTotal = cartTotal;
+    req.session.couponStatus = status;
     let addresses = await userHelper.getUserAddresses(req.session.user._id);
     let walletErr = req.session.walletErr;
-    console.log(walletErr);
-    res.render('user/selectAddress', { user: req.session.user, cartTotal, addresses, walletErr })
+    res.render('user/selectAddress', { user: req.session.user, cartTotal, addresses, walletErr, couponErr, status })
     req.session.walletErr = null;
+    req.session.coupon = null;
+    req.session.couponErr = null;
+    status = null;
   })
   .post(verifyLogin, async (req, res) => {
-    console.log(req.body);
     let products = await userHelper.getCartProductList(req.session.user._id);
-    let total = await userHelper.getTotalCartAmount(req.session.user._id);
+    let total
+    let status
+    if (req.session.newTotal) {
+      total = req.session.newTotal
+      status = req.session.couponStatus
+    } else {
+      total = await userHelper.getTotalCartAmount(req.session.user._id);
+    }
     let walletAmt = await userHelper.getWalletAmount(req.session.user._id);
-
     if (req.body.paymentMethod === 'wallet') {
       if (walletAmt > total) {
-        userHelper.placeWalletOrder(req.body, req.session.user._id, products, total).then(() => {
+        userHelper.placeWalletOrder(req.body, req.session.user._id, products, total, status).then(() => {
           res.json({ walletSuccess: true })
         })
       } else {
@@ -213,38 +235,49 @@ router.route('/place-order')
         res.json({ walletErr: true })
       }
     } else {
-      userHelper.placeOrder(req.body, req.session.user._id, products, total).then((orderId) => {
+      userHelper.placeOrder(req.body, req.session.user._id, products, total, status).then((orderId) => {
         if (req.body.paymentMethod === 'COD') {
           res.json({ codSuccess: true });
         } else {
           userHelper.generateRazorpay(orderId, total).then((response) => {
-            console.log(response);
             res.json({ response });
           })
         }
       })
     }
+    req.session.newTotal = null;
+    req.session.couponStatus = null;
   })
 
 router.route('/verify-payment')
   .post(verifyLogin, (req, res) => {
     userHelper.verifyPayment(req.body).then(() => {
-      userHelper.changePaymentStatus(req.body['order[response][receipt]']).then(() => {
+      userHelper.changePaymentStatus(req.body['order[response][receipt]'], req.session.user._id).then(() => {
         res.json({ status: true })
       }).catch((err) => {
         console.log(err);
         res.json({ status: false })
       })
-
     }).catch((err) => {
       console.log(err + 'error is here');
+    })
+  })
+
+router.route('/apply-coupon')
+  .post(async (req, res) => {
+    let coupon = req.body.couponName
+    userHelper.applyCoupon(coupon).then((status) => {
+      req.session.coupon = status
+      res.json({ resp: true })
+    }).catch((status) => {
+      req.session.couponErr = status.err
+      res.json({ resp: false })
     })
   })
 
 router.route('/remove-cartItem')
   .post(verifyLogin, (req, res) => {
     userHelper.removeCartItem(req.body.cartId, req.body.prodId).then((response) => {
-      console.log(response);
       res.json(true);
     })
   })
@@ -259,7 +292,6 @@ router.route('/orders')
 router.route('/order-details/:id')
   .get(verifyLogin, (req, res) => {
     userHelper.getOrderedProducts(req.params.id).then((orderDetails) => {
-      console.log(orderDetails);
       res.render('user/orderDetails', { user: req.session.user, orderDetails })
     })
   })
@@ -271,7 +303,6 @@ router.route('/order-placed')
 
 router.route('/cancel-order')
   .post(verifyLogin, (req, res) => {
-    console.log(req.body)
     userHelper.cancelOrder(req.body.orderId).then(() => {
       res.json({ status: true })
     })
@@ -280,7 +311,6 @@ router.route('/cancel-order')
 router.route('/wishlist')
   .get(verifyLogin, async (req, res) => {
     let wishlist = await userHelper.getWishlistProducts(req.session.user._id)
-    console.log(wishlist);
     res.render('user/wishlist', { user: req.session.user, wishlist })
   })
 
@@ -334,7 +364,6 @@ router.route('/address-form')
     res.render('user/addNewAddress', { user: req.session.user })
   })
   .post(verifyLogin, (req, res) => {
-    console.log(req.body);
     userHelper.saveAddressInUser(req.body).then((response) => {
       res.redirect('/place-order')
     })
@@ -342,7 +371,6 @@ router.route('/address-form')
 
 router.route('/remove-address')
   .post(verifyLogin, (req, res) => {
-    console.log(req.body);
     userHelper.removeAddress(req.session.user._id, req.body).then(() => {
       res.json({ status: true })
     })
@@ -383,15 +411,16 @@ router.route('/phone-check')
 
 router.route('/return-order/:id')
   .get(verifyLogin, (req, res) => {
-    console.log(req.params.id);
     userHelper.returnOrder(req.params.id).then(() => {
       res.redirect('/orders')
     })
   })
 
+
+
 router.route('/sample')
   .get((req, res) => {
-    res.render('user/sample')
+    res.render('admin/coupon')
   })
   .post((req, res) => {
     console.log(req.body);

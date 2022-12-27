@@ -1,5 +1,5 @@
 var db = require('../config/connection')
-const { USER_COLLECTION, CART_COLLECTION, PRODUCT_COLLECTION, ORDER_COLLECTION, BANNER_COLLECTION, WISHLIST_COLLECTION, CATEGORY_COLLECTION } = require('../config/collections');
+const { USER_COLLECTION, CART_COLLECTION, PRODUCT_COLLECTION, ORDER_COLLECTION, BANNER_COLLECTION, WISHLIST_COLLECTION, CATEGORY_COLLECTION, COUPON_COLLECTION } = require('../config/collections');
 const bcrypt = require('bcrypt');
 var objectId = require('mongodb').ObjectId
 const otp = require('../config/otp');
@@ -29,7 +29,6 @@ module.exports = {
         userData.password = await bcrypt.hash(userData.password, 10)
         userData.walletHistory = []
         userData.referral = Math.floor((Math.random() * 100000000) + 12345)
-        console.log(userData);
         db.get().collection(USER_COLLECTION).insertOne(userData).then(() => {
           resolve({ status: "User Created Successfully without referral code!!" })
         })
@@ -81,7 +80,6 @@ module.exports = {
           userData.password = await bcrypt.hash(userData.password, 10)
           userData.walletHistory = []
           userData.referral = Math.floor((Math.random() * 100000000) + 12345)
-          console.log(userData);
           db.get().collection(USER_COLLECTION).insertOne(userData).then(() => {
             resolve({ status: "Invalid referral number, user Created Successfully!!" })
           })
@@ -102,17 +100,14 @@ module.exports = {
         if (!user.blocked) {
           bcrypt.compare(userData.password, user.password).then((status) => {
             if (status) {
-              // console.log(user);
               response.user = user
               response.status = true
               resolve(response)
             } else {
-              // console.log("login failed");
               resolve({ status: false })
             }
           })
         } else {
-          // console.log("Login failed");
           resolve({ status: false })
         }
       } else {
@@ -131,8 +126,7 @@ module.exports = {
     let response = {}
     return new Promise(async (resolve, reject) => {
       let user = await db.get().collection(USER_COLLECTION).findOne({ number: userData.phone })
-      // console.log(user);
-      // console.log(otp.accountSID, otp.authToken, otp.serviceID);
+
       if (user) {
         response.status = true
         response.user = user
@@ -140,16 +134,12 @@ module.exports = {
           .services(otp.serviceID)
           .verifications.create({ to: `+91${userData.phone}`, channel: 'sms' })
           .then((verification) => {
-            // console.log(verification.status);
           });
-        // console.log(response);
         resolve(response)
-
       }
       else {
         response.status = false;
         resolve(response)
-
       }
     })
   },
@@ -199,7 +189,6 @@ module.exports = {
       let userCart = await db.get().collection(CART_COLLECTION).findOne({ user: objectId(userId) })
       if (userCart) {
         let proExist = userCart.products.findIndex(product => product.item == proId)
-        // console.log(proExist);
         if (proExist != -1) {
           db.get().collection(CART_COLLECTION)
             .updateOne({ user: objectId(userId), 'products.item': objectId(proId) },
@@ -267,7 +256,6 @@ module.exports = {
     return new Promise(async (resolve, reject) => {
       let count = 0;
       let cart = await db.get().collection(CART_COLLECTION).findOne({ user: objectId(userId) });
-      // console.log(cart);
       if (cart) {
         count = cart.products.length
       }
@@ -304,10 +292,8 @@ module.exports = {
       }
     })
   },
-
   getTotalCartAmount: (userId) => {
     return new Promise(async (resolve, reject) => {
-      // let quantity = parseInt(quantity)
 
       let cartTotal = await db.get().collection(CART_COLLECTION).aggregate([
         {
@@ -344,16 +330,14 @@ module.exports = {
           }
         }
       ]).toArray()
-      if (cartTotal.length != 0) {
-
+      if (cartTotal[0]) {
         resolve(cartTotal[0].total)
-
       } else {
-
-        resolve(false)
+        resolve()
       }
     })
   },
+
 
   removeCartItem: (cartId, prodId) => {
     return new Promise(async (resolve, reject) => {
@@ -368,21 +352,25 @@ module.exports = {
     })
   },
 
-  placeOrder: (orderDetails, userId, products, total) => {
+  placeOrder: (orderDetails, userId, products, total, status) => {
     return new Promise(async (resolve, reject) => {
 
       let status = orderDetails.paymentMethod === 'COD' ? 'Placed' : 'Pending';
-
-      let deliveryAddress = await db.get().collection(USER_COLLECTION).findOne(
-        { _id: objectId(userId) },
-        {
-          projection: {
-            _id: 0,
-            address: { $elemMatch: { id: orderDetails.address } }
+      if (orderDetails.saveAddress) {
+        const crypto = require('crypto');
+        let id = crypto.randomUUID()
+        orderDetails.id = id
+        await db.get().collection(USER_COLLECTION).updateOne(
+          {
+            _id: objectId(userId)
+          },
+          {
+            $push: {
+              address: orderDetails
+            }
           }
-        }
-      )
-      deliveryAddress = deliveryAddress.address[0]
+        )
+      }
 
       let today = new Date();
       let dd = String(today.getDate()).padStart(2, '0');
@@ -391,11 +379,10 @@ module.exports = {
       today = dd + '-' + mm + '-' + yyyy;
       let orderObj = {
         deliveryDetails: {
-          name: deliveryAddress.name,
-          mobile: deliveryAddress.contactNumber,
-          address: deliveryAddress.address,
-          locality: deliveryAddress.locality,
-          pincode: deliveryAddress.pincode,
+          name: orderDetails.name,
+          mobile: orderDetails.contactNumber,
+          locality: orderDetails.locality,
+          pincode: orderDetails.pincode,
         },
         userId: objectId(userId),
         products: products,
@@ -403,12 +390,15 @@ module.exports = {
         paymentMethod: orderDetails.paymentMethod,
         status: status,
         date: today,
+        couponStatus: status,
         cancelled: false
       }
 
       db.get().collection(ORDER_COLLECTION).insertOne(orderObj)
         .then((data) => {
-          db.get().collection(CART_COLLECTION).deleteOne({ user: objectId(userId) });
+          if (orderDetails.paymentMethod === 'COD') {
+            db.get().collection(CART_COLLECTION).deleteOne({ user: objectId(userId) });
+          }
           resolve(data.insertedId);
         })
     })
@@ -547,7 +537,6 @@ module.exports = {
         }
         db.get().collection(WISHLIST_COLLECTION)
           .insertOne(wishlistObj).then((data) => {
-            // console.log(data);
             resolve()
           })
       }
@@ -555,8 +544,6 @@ module.exports = {
   },
 
   removeFromWishlist: (prodId, userId) => {
-    // console.log(prodId);
-    // console.log(userId);
     return new Promise(async (resolve, reject) => {
       await db.get().collection(WISHLIST_COLLECTION)
         .updateOne(
@@ -580,7 +567,6 @@ module.exports = {
     return new Promise(async (resolve, reject) => {
       let count = 0;
       let wishlist = await db.get().collection(WISHLIST_COLLECTION).findOne({ user: objectId(userId) });
-      // console.log(cart);
       if (wishlist) {
         count = wishlist.products.length
       }
@@ -618,7 +604,6 @@ module.exports = {
   },
 
   generateRazorpay: (orderId, totalPrice) => {
-    // console.log('' + orderId, totalPrice);
     return new Promise((resolve, reject) => {
       instance.orders.create({
         amount: totalPrice * 100,
@@ -650,7 +635,7 @@ module.exports = {
     })
   },
 
-  changePaymentStatus: (orderId) => {
+  changePaymentStatus: (orderId, userId) => {
     return new Promise(async (resolve, reject) => {
       await db.get().collection(ORDER_COLLECTION).updateOne(
         {
@@ -662,6 +647,7 @@ module.exports = {
           }
         }
       ).then(() => {
+        db.get().collection(CART_COLLECTION).deleteOne({ user: objectId(userId) });
         resolve()
       }).catch(() => {
         reject()
@@ -685,7 +671,6 @@ module.exports = {
             }
           }
         ).then((data) => {
-          console.log(data);
           resolve()
         })
     })
@@ -755,7 +740,6 @@ module.exports = {
   getUserAddresses: (userId) => {
     return new Promise((resolve, reject) => {
       db.get().collection(USER_COLLECTION).findOne({ _id: objectId(userId) }).then((data) => {
-        // console.log(data);
         resolve(data.address)
       })
     })
@@ -820,20 +804,25 @@ module.exports = {
     })
   },
 
-  placeWalletOrder: (orderDetails, userId, products, total) => {
+  placeWalletOrder: (orderDetails, userId, products, total, status) => {
     return new Promise(async (resolve, reject) => {
       let status = "Placed"
-      let deliveryAddress = await db.get().collection(USER_COLLECTION).findOne(
-        { _id: objectId(userId) },
-        {
-          projection: {
-            _id: 0,
-            address: { $elemMatch: { id: orderDetails.address } }
+
+      if (orderDetails.saveAddress) {
+        const crypto = require('crypto');
+        let id = crypto.randomUUID()
+        orderDetails.id = id
+        await db.get().collection(USER_COLLECTION).updateOne(
+          {
+            _id: objectId(userId)
+          },
+          {
+            $push: {
+              address: orderDetails
+            }
           }
-        }
-      )
-      deliveryAddress = deliveryAddress.address[0]
-      console.log(deliveryAddress);
+        )
+      }
 
       let today = new Date();
       let dd = String(today.getDate()).padStart(2, '0');
@@ -842,11 +831,10 @@ module.exports = {
       today = dd + '-' + mm + '-' + yyyy;
       let orderObj = {
         deliveryDetails: {
-          name: deliveryAddress.name,
-          mobile: deliveryAddress.contactNumber,
-          address: deliveryAddress.address,
-          locality: deliveryAddress.locality,
-          pincode: deliveryAddress.pincode,
+          name: orderDetails.name,
+          mobile: orderDetails.contactNumber,
+          locality: orderDetails.locality,
+          pincode: orderDetails.pincode,
         },
         userId: objectId(userId),
         products: products,
@@ -897,7 +885,6 @@ module.exports = {
   phoneCheck: (phone) => {
     return new Promise(async (resolve, reject) => {
       let userExists = await db.get().collection(USER_COLLECTION).find({ number: '' + phone }).toArray()
-      console.log(userExists);
       if (!userExists[0]) {
         resolve();
       } else {
@@ -920,6 +907,38 @@ module.exports = {
         }
       ).then(() => {
         resolve()
+      })
+    })
+  },
+  verifyCouponCode: (couponCode) => {
+    return new Promise(async (resolve, reject) => {
+      let couponTrue = await db.get().collection(COUPON_COLLECTION).findOne({ couponName: couponCode });
+      if (couponTrue) {
+        resolve(couponTrue)
+      } else {
+        reject()
+      }
+    })
+  },
+  applyCoupon: (couponName) => {
+    return new Promise(async (resolve, reject) => {
+      let couponTrue = await db.get().collection(COUPON_COLLECTION).findOne({ couponName: couponName })
+      let status = {}
+      if (couponTrue) {
+        status.minAmount = couponTrue.minAmount
+        status.maxDiscount = couponTrue.maxDiscount
+        status.discountPercentage = couponTrue.percentage
+        resolve(status)
+      } else {
+        status.err = 'Invalid coupon!!'
+        reject(status)
+      }
+    })
+  },
+  getCartAmount: (userId) => {
+    return new Promise(async (resolve, reject) => {
+      db.get().collection(CART_COLLECTION).findOne({ user: objectId(userId) }).then((data) => {
+        resolve(data.cartTotal)
       })
     })
   }
