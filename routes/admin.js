@@ -126,18 +126,14 @@ router.route("/add-product")
 // all orders route
 router.route("/all-orders")
   .get(adminRouteProtection, async function (req, res) {
-    await adminHelper.getAllOrders().then((orders) => {
-
-      res.render('admin/all-orders',
-        {
-          admin: req.session.admin,
-          orders,
-          statusChange: req.session.orderStatus
-        }
-      )
-      req.session.orderStatus = null;
-
+    const page = parseInt(req.query.page) || 1;
+    const limit = 5;
+    let count = await adminHelper.orderCount();
+    const numPages = Math.ceil(count / limit)
+    adminHelper.getOrderList(page, limit).then((orders) => {
+      res.render('admin/all-orders', { orders, numPages, page, admin: req.session.admin })
     })
+
   });
 
 // delete product
@@ -235,10 +231,8 @@ router.route('/list-banner')
 
 router.route('/dashboard')
   .get(adminRouteProtection, async (req, res) => {
-
     let userCount = await adminHelper.allUsersCount()
     let orderStatusCount = await adminHelper.orderStatusCount()
-
     res.render('admin/dashboard', { admin: req.session.admin, userCount, orderStatusCount })
   })
 
@@ -309,3 +303,59 @@ router.route('/remove-coupon')
 
 
 module.exports = router;
+
+
+
+
+/* getprodlist: (startIndex, limit) => {
+
+  return new Promise(async (resolve, reject) => {
+
+
+    let index = ((startIndex - 1) * limit)
+
+    console.log(index);
+
+
+    let categoryName = await db.get().collection(collection.PRODUCTCOLLECTION).aggregate([
+
+      {
+        $lookup: {
+
+          from: collection.CATEGORYCOLLECTION,
+          localField: 'category',
+          foreignField: '_id',
+          as: 'category'
+        }
+      },
+      {
+        $project: {
+          category: { $arrayElemAt: ['$category', 0] },
+          name: 1,
+          image: 1,
+          price: 1,
+          description: 1,
+          originalPrice: 1,
+          offerPercentage: 1
+
+
+        }
+      },
+      {
+        $skip: index
+
+
+      }, {
+        $limit: limit
+
+
+      }
+    ]).toArray()
+
+    console.log(categoryName, "222222222222211111");
+    resolve(categoryName)
+
+  })
+
+
+} */

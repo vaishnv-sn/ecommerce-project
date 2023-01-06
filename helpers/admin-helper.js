@@ -56,12 +56,83 @@ module.exports = {
       }
     })
   },
+
+  orderCount: () => {
+    return new Promise(async (resolve, reject) => {
+      await db.get().collection(ORDER_COLLECTION).count().then((orderCount) => {
+        resolve(orderCount)
+      })
+    }
+    )
+  },
+
+  getOrderList: (startIndex, limit) => {
+    return new Promise(async (resolve, reject) => {
+      let index = ((startIndex - 1) * limit);
+      let orders = await db.get().collection(ORDER_COLLECTION).find().skip(index).limit(limit).toArray()
+      resolve(orders);
+    })
+  },
+
   getAllOrders: () => {
     return new Promise(async (resolve, reject) => {
       let orders = await db.get().collection(ORDER_COLLECTION).find().toArray()
       resolve(orders.reverse())
     })
   },
+
+  getAllOrderss: (startIndex, limit) => {
+
+    return new Promise(async (resolve, reject) => {
+
+
+      let index = ((startIndex - 1) * limit)
+
+      console.log(index);
+
+
+      let categoryName = await db.get().collection(collection.PRODUCTCOLLECTION).aggregate([
+
+        {
+          $lookup: {
+
+            from: collection.CATEGORYCOLLECTION,
+            localField: 'category',
+            foreignField: '_id',
+            as: 'category'
+          }
+        },
+        {
+          $project: {
+            category: { $arrayElemAt: ['$category', 0] },
+            name: 1,
+            image: 1,
+            price: 1,
+            description: 1,
+            originalPrice: 1,
+            offerPercentage: 1
+
+
+          }
+        },
+        {
+          $skip: index
+
+
+        }, {
+          $limit: limit
+
+
+        }
+      ]).toArray()
+
+      resolve(categoryName)
+
+    })
+
+
+  },
+
   cancelOrder: (orderId) => {
     return new Promise(async (resolve, reject) => {
       await db.get().collection(ORDER_COLLECTION).findOneAndUpdate(

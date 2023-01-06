@@ -33,9 +33,17 @@ app.engine('hbs', hbs.engine({
     },
     multiply: function (item1, item2) {
       return item1 * item2
+    },
+    dec: function (value) {
+      return parseInt(value) - 1
+    },
+    greaterThan: function (value1, value2) {
+      return parseInt(value1) > parseInt(value2)
+    },
+    lessThan: function (value1, value2) {
+      return parseInt(value1) < parseInt(value2)
     }
   }
-
 }))
 
 

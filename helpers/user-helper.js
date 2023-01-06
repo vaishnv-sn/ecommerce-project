@@ -352,7 +352,7 @@ module.exports = {
     })
   },
 
-  placeOrder: (orderDetails, userId, products, total, status) => {
+  placeOrder: (orderDetails, userId, products, total, couponStatus) => {
     return new Promise(async (resolve, reject) => {
 
       let status = orderDetails.paymentMethod === 'COD' ? 'Placed' : 'Pending';
@@ -390,7 +390,7 @@ module.exports = {
         paymentMethod: orderDetails.paymentMethod,
         status: status,
         date: today,
-        couponStatus: status,
+        couponStatus: couponStatus,
         cancelled: false
       }
 
@@ -939,6 +939,13 @@ module.exports = {
     return new Promise(async (resolve, reject) => {
       db.get().collection(CART_COLLECTION).findOne({ user: objectId(userId) }).then((data) => {
         resolve(data.cartTotal)
+      })
+    })
+  },
+  getOrder: (orderId) => {
+    return new Promise((resolve, reject) => {
+      db.get().collection(ORDER_COLLECTION).findOne({ _id: objectId(orderId) }).then((data) => {
+        resolve(data)
       })
     })
   }

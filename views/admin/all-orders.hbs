@@ -68,13 +68,21 @@
       {{/each}}
     </tbody>
   </table>
+  {{#if (greaterThan page 1)}}
+  <a href="/admin/all-orders?page={{dec page}}">Previous</a>
+  {{/if}}
+  Page {{page}} of {{numPages}}
+  {{#if (lessThan page numPages)}}
+  <a href="/admin/all-orders?page={{inc page}}">Next</a>
+  {{/if}}
+
 </div>
 
 
 <script>
-  $(document).ready(function () {
-    $('#userTable').DataTable();
-  });
+  //$(document).ready(function () {
+  //  $('#userTable').DataTable();
+  //});
 
   function cancelOrder(orderId) {
     console.log(orderId)

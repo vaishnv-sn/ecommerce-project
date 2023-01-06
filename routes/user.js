@@ -290,9 +290,11 @@ router.route('/orders')
   })
 
 router.route('/order-details/:id')
-  .get(verifyLogin, (req, res) => {
+  .get(verifyLogin, async (req, res) => {
+    let order = await userHelper.getOrder(req.params.id)
     userHelper.getOrderedProducts(req.params.id).then((orderDetails) => {
-      res.render('user/orderDetails', { user: req.session.user, orderDetails })
+      console.log(orderDetails);
+      res.render('user/orderDetails', { user: req.session.user, orderDetails, order })
     })
   })
 
@@ -420,7 +422,7 @@ router.route('/return-order/:id')
 
 router.route('/sample')
   .get((req, res) => {
-    res.render('admin/coupon')
+    res.render('admin/all-orders')
   })
   .post((req, res) => {
     console.log(req.body);

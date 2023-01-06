@@ -14,11 +14,12 @@
                             <small class="text-muted">{{this.product.pro_description}}</small>
                             <div class="text-success">₹{{this.product.pro_price}}</div>
                             <div>Quantity <span class="text-danger">{{this.quantity}}</span></div>
-
                         </td>
                         <td>
                         </td>
                     </tr>
+                    <p class="m-5 text-success">{{order.couponStatus}}</p>
+
                     {{/each}}
                 </tbody>
             </table>
