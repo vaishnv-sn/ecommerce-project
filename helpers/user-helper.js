@@ -2,15 +2,15 @@ var db = require('../config/connection')
 const { USER_COLLECTION, CART_COLLECTION, PRODUCT_COLLECTION, ORDER_COLLECTION, BANNER_COLLECTION, WISHLIST_COLLECTION, CATEGORY_COLLECTION, COUPON_COLLECTION } = require('../config/collections');
 const bcrypt = require('bcrypt');
 var objectId = require('mongodb').ObjectId
-const otp = require('../config/otp');
 const { response } = require('express');
-const client = require('twilio')(otp.accountSID, otp.authToken)
+require('dotenv').config()
+const client = require('twilio')(process.env.accountSID_twilio, process.env.authToken_twilio)
 const razorpay = require('razorpay');
 const { resolve } = require('path');
 
 var instance = new razorpay({
-  key_id: 'rzp_test_FhG5qtJmHWybtq',
-  key_secret: 'JCorSRosrNLhJkdmREMshtJm',
+  key_id: process.env.key_id_razorpay,
+  key_secret: process.env.key_secret_razorpay,
 });
 
 
@@ -131,7 +131,7 @@ module.exports = {
         response.status = true
         response.user = user
         client.verify.v2
-          .services(otp.serviceID)
+          .services(process.env.serviceID_twilio)
           .verifications.create({ to: `+91${userData.phone}`, channel: 'sms' })
           .then((verification) => {
           });
@@ -154,7 +154,7 @@ module.exports = {
     return new Promise((resolve, reject) => {
 
       client.verify.v2
-        .services(otp.serviceID)
+        .services(process.env.serviceID_twilio)
         .verificationChecks.create({ to: `+91${number}`, code: OTP.otp })
         .then((data) => {
           if (data.status == 'approved') {
