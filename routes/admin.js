@@ -203,7 +203,6 @@ router.route('/cancel-order')
 router.route('/add-banner')
   .get(adminRouteProtection, async (req, res) => {
     await adminHelper.getBanners().then((banners) => {
-      // console.log(banners);
       res.render('admin/add-banner', { admin: req.session.admin, banners })
 
     })
@@ -220,7 +219,7 @@ router.route('/add-banner')
       fileName.banner2 = req.files.banner2[0].filename
       fileName.banner3 = req.files.banner3[0].filename
       await adminHelper.editBanners(fileName).then((response) => {
-        res.redirect('/admin/list-banner')
+        res.redirect('/admin/add-banner')
       })
     })
 

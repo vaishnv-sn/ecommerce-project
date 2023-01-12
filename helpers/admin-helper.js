@@ -177,21 +177,36 @@ module.exports = {
   },
   editBanners: (banners) => {
     return new Promise(async (resolve, reject) => {
-      await db.get().collection(BANNER_COLLECTION).updateOne(
-        {
+      let bannerValue = await db.get().collection(BANNER_COLLECTION).findOne({})
+      console.log(bannerValue);
+      if (bannerValue) {
+        await db.get().collection(BANNER_COLLECTION).updateOne(
+          {
 
-        },
-        {
-          $set: {
+          },
+          {
+            $set: {
+              banner1: banners.banner1,
+              banner2: banners.banner2,
+              banner3: banners.banner3
+            }
+
+          }
+        ).then(() => {
+          resolve()
+        })
+      } else {
+        await db.get().collection(BANNER_COLLECTION).insertOne(
+          {
             banner1: banners.banner1,
             banner2: banners.banner2,
             banner3: banners.banner3
           }
+        ).then(() => {
+          resolve()
+        })
+      }
 
-        }
-      ).then(() => {
-        resolve()
-      })
     })
   },
   editBanner1: () => {
