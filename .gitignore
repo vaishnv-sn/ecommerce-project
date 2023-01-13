@@ -1,3 +1,5 @@
-node_modules
-references
+/node_modules
+/references
 .env
+/public
+package-lock.json
