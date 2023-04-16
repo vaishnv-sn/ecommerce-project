@@ -1,5 +1,5 @@
-/node_modules
-/references
+node_modules/
+references/
 .env
-/public
+public/
 package-lock.json
